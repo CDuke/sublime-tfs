@@ -2,12 +2,14 @@ import sublime, sublime_plugin, re
 import threading
 import shlex
 import subprocess
+import os
 
 class TfsManager(object):
     def __init__(self):
         self.name = 'sublime_tfs'
         settings = sublime.load_settings('sublime_tfs.sublime-settings')
         self.tf_path = settings.get("tf_path")
+        self.cwd = os.path.expandvars('%HOMEDRIVE%\\')
 
     def is_under_tfs(self, path):
         return self.status(path)
@@ -42,20 +44,20 @@ class TfsManager(object):
     def run_command(self, command, path, is_graph = False):
         commands = [self.tf_path, command, path]
         if (is_graph):
-            p = subprocess.Popen(commands, cwd="C:/")
+            p = subprocess.Popen(commands, cwd=self.cwd)
         else:
             p = self.launch_Without_Console(commands)
         (out, err) = p.communicate()
-        if not (err is None or err == ""):
-            return (False, err)
+        if p.returncode != 0:
+            return (False, err if not err is None else "Unknown error")
         else:
-            return (True, "")
+            return (True, out)
 
     def launch_Without_Console(self, command):
         """Launches 'command' windowless and waits until finished"""
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        return subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd="C:/", startupinfo=startupinfo)
+        return subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=self.cwd, startupinfo=startupinfo)
 
 class TfsRunnerThread(threading.Thread):
     """docstring for ClearLogTread"""
@@ -70,7 +72,7 @@ class TfsRunnerThread(threading.Thread):
         (self.success, self.message) = self.method(self.path)
 
 class ThreadProgress():
-    def __init__(self, view, thread, message, success_message):
+    def __init__(self, view, thread, message, success_message = None):
         self.view = view
         self.thread = thread
         self.message = message
@@ -82,10 +84,10 @@ class ThreadProgress():
     def run(self, i):
         if not self.thread.is_alive():
             self.view.erase_status('tfs')
-            if hasattr(self.thread, 'success') and not self.thread.success:
+            if not self.thread.success:
                 sublime.status_message(self.thread.message)
                 return
-            sublime.status_message(self.success_message)
+            sublime.status_message(self.success_message if not self.success_message is None else self.thread.message)
             return
 
         before = i % self.size
@@ -176,8 +178,8 @@ class TfsStatusCommand(sublime_plugin.TextCommand):
         path = self.view.file_name()
         if not (path is None):
             manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.delete)
+            thread = TfsRunnerThread(path, manager.status)
             thread.start()
-            ThreadProgress(self.view, thread, "Get status...", "Got status sucess: %s" % path)
+            ThreadProgress(self.view, thread, "Getting status...")
 
 

@@ -123,6 +123,7 @@ class TfsCheckinCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
         if not (path is None):
+            self.view.run_command('save')
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.checkin)
             thread.start()
@@ -150,6 +151,7 @@ class TfsGetLatestCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
         if not (path is None):
+            self.view.run_command('save')
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.get_latest)
             thread.start()
@@ -159,6 +161,7 @@ class TfsDifferenceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
         if not (path is None):
+            self.view.run_command('save')
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.difference)
             thread.start()

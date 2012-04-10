@@ -161,7 +161,7 @@ class TfsGetLatestCommand(sublime_plugin.TextCommand):
             ThreadProgress(self.view, thread, "Getting...", "Get latest sucess: %s" % path)
 
 class TfsDifferenceCommand(sublime_plugin.TextCommand):
-    def run(self, edit)
+    def run(self, edit):
         path = self.view.file_name()
         if not (path is None):
             if (not isReadonly(path)):

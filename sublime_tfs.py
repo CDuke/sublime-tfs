@@ -109,7 +109,7 @@ class TfsCheckoutCommand(sublime_plugin.TextCommand):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.checkout)
             thread.start()
-            ThreadProgress(self.view, thread, "Checkout...", "Chekout success: %s" % path)
+            ThreadProgress(self.view, thread, "Checkout...", "Checkout success: %s" % path)
 
 class TfsUndoCommand(sublime_plugin.TextCommand):
     def run(self, edit):

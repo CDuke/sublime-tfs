@@ -109,7 +109,7 @@ class TfsCheckoutCommand(sublime_plugin.TextCommand):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.checkout)
             thread.start()
-            ThreadProgress(self.view, thread, "Checkout...", "Chekout sucess: %s" % path)
+            ThreadProgress(self.view, thread, "Checkout...", "Chekout success: %s" % path)
 
 class TfsUndoCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -118,7 +118,7 @@ class TfsUndoCommand(sublime_plugin.TextCommand):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.undo)
             thread.start()
-            ThreadProgress(self.view, thread, "Undo...", "Undo sucess: %s" % path)
+            ThreadProgress(self.view, thread, "Undo...", "Undo success: %s" % path)
 
 class TfsCheckinCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -129,7 +129,7 @@ class TfsCheckinCommand(sublime_plugin.TextCommand):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.checkin)
             thread.start()
-            ThreadProgress(self.view, thread, "Checkin...", "Checkin sucess: %s" % path)
+            ThreadProgress(self.view, thread, "Checkin...", "Checkin success: %s" % path)
 
 class TfsHistoryCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -138,7 +138,7 @@ class TfsHistoryCommand(sublime_plugin.TextCommand):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.history)
             thread.start()
-            ThreadProgress(self.view, thread, "History...", "History sucess: %s" % path)
+            ThreadProgress(self.view, thread, "History...", "History success: %s" % path)
 
 class TfsAddCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -147,7 +147,7 @@ class TfsAddCommand(sublime_plugin.TextCommand):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.add)
             thread.start()
-            ThreadProgress(self.view, thread, "Adding...", "Added sucess: %s" % path)
+            ThreadProgress(self.view, thread, "Adding...", "Added success: %s" % path)
 
 class TfsGetLatestCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -158,7 +158,7 @@ class TfsGetLatestCommand(sublime_plugin.TextCommand):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.get_latest)
             thread.start()
-            ThreadProgress(self.view, thread, "Getting...", "Get latest sucess: %s" % path)
+            ThreadProgress(self.view, thread, "Getting...", "Get latest success: %s" % path)
 
 class TfsDifferenceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -169,7 +169,7 @@ class TfsDifferenceCommand(sublime_plugin.TextCommand):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.difference)
             thread.start()
-            ThreadProgress(self.view, thread, "Comparing...", "Comparing sucess: %s" % path)
+            ThreadProgress(self.view, thread, "Comparing...", "Comparing success: %s" % path)
 
 class TfsDeleteCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -178,7 +178,7 @@ class TfsDeleteCommand(sublime_plugin.TextCommand):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.delete)
             thread.start()
-            ThreadProgress(self.view, thread, "Deleting...", "Delete sucess: %s" % path)
+            ThreadProgress(self.view, thread, "Deleting...", "Delete success: %s" % path)
 
 class TfsStatusCommand(sublime_plugin.TextCommand):
     def run(self, edit):

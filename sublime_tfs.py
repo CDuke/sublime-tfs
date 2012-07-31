@@ -42,6 +42,13 @@ class TfsManager(object):
     def status(self, path):
         return self.run_command("status", path)
 
+    def auto_checkout(self, path):
+        if self.status(path)[0]:
+            self.checkout(path)
+            return (True, "")
+        else:
+            return (False, "")
+
     def run_command(self, command, path, is_graph = False):
         commands = [self.tf_path, command, path]
         if (is_graph):
@@ -188,6 +195,15 @@ class TfsStatusCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.status)
             thread.start()
             ThreadProgress(self.view, thread, "Getting status...")
+
+class TfsEventListener(sublime_plugin.EventListener):
+    def on_modified(self, view):
+        path = view.file_name()
+        if not (path is None) and isReadonly(path):
+            manager = TfsManager()
+            thread = TfsRunnerThread(path, manager.auto_checkout)
+            thread.start()
+            ThreadProgress(view, thread, "Checkout...", "Checkout success: %s" % path)
 
 def isReadonly(path):
     fileAtt = os.stat(path)[0]

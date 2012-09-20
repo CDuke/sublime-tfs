@@ -10,6 +10,7 @@ class TfsManager(object):
         self.name = 'sublime_tfs'
         settings = sublime.load_settings('sublime_tfs.sublime-settings')
         self.tf_path = settings.get("tf_path")
+        self.tfpt_path = settings.get("tfpt_path")
         self.cwd = os.path.expandvars('%HOMEDRIVE%\\')
 
     def is_under_tfs(self, path):
@@ -42,6 +43,9 @@ class TfsManager(object):
     def status(self, path):
         return self.run_command("status", path)
 
+    def annotate(self, path):
+        return self.run_command("annotate", path, True, True)
+
     def auto_checkout(self, path):
         if self.status(path)[0]:
             self.checkout(path)
@@ -49,8 +53,8 @@ class TfsManager(object):
         else:
             return (False, "")
 
-    def run_command(self, command, path, is_graph = False):
-        commands = [self.tf_path, command, path]
+    def run_command(self, command, path, is_graph = False, is_tfpt = False):
+        commands = [self.tfpt_path if is_tfpt else self.tf_path, command, path]
         if (is_graph):
             p = subprocess.Popen(commands, cwd=self.cwd)
         else:
@@ -195,6 +199,15 @@ class TfsStatusCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.status)
             thread.start()
             ThreadProgress(self.view, thread, "Getting status...")
+
+class TfsAnnotateCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        path = self.view.file_name()
+        if not (path is None):
+            manager = TfsManager()
+            thread = TfsRunnerThread(path, manager.annotate)
+            thread.start()
+            ThreadProgress(self.view, thread, "Annotating...")
 
 class TfsEventListener(sublime_plugin.EventListener):
     def on_modified(self, view):

@@ -1,3 +1,4 @@
 {
-    "tf_path": "C:/Program Files (x86)/Microsoft Visual Studio 10.0/Common7/IDE/TF.exe"
+    "tf_path": "C:/Program Files (x86)/Microsoft Visual Studio 10.0/Common7/IDE/TF.exe",
+    "tfpt_path": "C:/Program Files (x86)/Microsoft Team Foundation Server 2010 Power Tools/TFPT.exe"
 }

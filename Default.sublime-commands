@@ -8,6 +8,7 @@
     { "command": "tfs_difference", "caption": "TFS: Compare with latest" },
     { "command": "tfs_delete", "caption": "TFS: Delete" },
     { "command": "tfs_status", "caption": "TFS: Status" },
+    { "command": "tfs_annotate", "caption": "TFS: Annotate" },
     {
         "caption": "Preferences: Sublime TFS Settings – Default",
         "command": "open_file", "args":

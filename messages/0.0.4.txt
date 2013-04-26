@@ -1,0 +1,8 @@
+Sublime TFS 0.0.4 Changelog:
+
+Features:
+- Add anotate command
+- Add "Auto checkout"
+- Add context menu
+Bug fix:
+- Small bugfix and typo

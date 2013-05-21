@@ -10,8 +10,8 @@ def is_python_3_version():
     return sys.hexversion > 0x03000000
 
 def get_unicode_filename(view):
-    file_name = view.file_name() if is_python_3_version else unicode(view.file_name())
-    return file_name.encode(locale.getpreferredencoding());
+    file_name = view.file_name() if is_python_3_version() else unicode(view.file_name())
+    return file_name.encode(locale.getpreferredencoding()) if not file_name is None else None;
 
 class TfsManager(object):
     def __init__(self):

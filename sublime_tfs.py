@@ -221,14 +221,15 @@ class TfsAnnotateCommand(sublime_plugin.TextCommand):
 
 class TfsEventListener(sublime_plugin.EventListener):
     def on_modified(self, view):
+        if manager.auto_checkout_enabled:
+            return
         path = get_unicode_filename(view)
         if not (path is None):
             manager = TfsManager()
             if isReadonly(path):
-                if manager.auto_checkout_enabled:
-                    thread = TfsRunnerThread(path, manager.auto_checkout)
-                    thread.start()
-                    ThreadProgress(view, thread, "Checkout...", "Checkout success: %s" % path)
+                thread = TfsRunnerThread(path, manager.auto_checkout)
+                thread.start()
+                ThreadProgress(view, thread, "Checkout...", "Checkout success: %s" % path)
 
 def isReadonly(p_path):
     try:

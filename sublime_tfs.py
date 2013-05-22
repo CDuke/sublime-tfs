@@ -5,6 +5,7 @@ import shlex
 import subprocess
 import os
 import stat
+import sys
 
 def is_python_3_version():
     return sys.hexversion > 0x03000000

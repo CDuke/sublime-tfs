@@ -66,16 +66,20 @@ class TfsManager(object):
             return (False, "")
 
     def run_command(self, command, path, is_graph = False, is_tfpt = False):
-        commands = [self.tfpt_path if is_tfpt else self.tf_path, command, path]
-        if (is_graph):
-            p = subprocess.Popen(commands, cwd=self.cwd)
-        else:
-            p = self.launch_Without_Console(commands)
-        (out, err) = p.communicate()
-        if p.returncode != 0:
-            return (False, err if not err is None else "Unknown error")
-        else:
-            return (True, out)
+        try:
+            commands = [self.tfpt_path if is_tfpt else self.tf_path, command, path]
+            if (is_graph):
+                p = subprocess.Popen(commands, cwd=self.cwd)
+            else:
+                p = self.launch_Without_Console(commands)
+            (out, err) = p.communicate()
+            if p.returncode != 0:
+                return (False, err if not err is None else "Unknown error")
+            else:
+                return (True, out)
+        except Exception:
+            print("commands: %s" % commands)
+            print("is_graph: %s" % is_graph)
 
     def launch_Without_Console(self, command):
         """Launches 'command' windowless and waits until finished"""
@@ -221,14 +225,16 @@ class TfsAnnotateCommand(sublime_plugin.TextCommand):
             ThreadProgress(self.view, thread, "Annotating...")
 
 class TfsEventListener(sublime_plugin.EventListener):
+    def __init__(self):
+        self.manager = TfsManager()
+
     def on_modified(self, view):
-        if not manager.auto_checkout_enabled:
+        if not self.manager.auto_checkout_enabled:
             return
         path = get_unicode_filename(view)
         if not (path is None):
-            manager = TfsManager()
             if isReadonly(path):
-                thread = TfsRunnerThread(path, manager.auto_checkout)
+                thread = TfsRunnerThread(path, self.manager.auto_checkout)
                 thread.start()
                 ThreadProgress(view, thread, "Checkout...", "Checkout success: %s" % path)
 

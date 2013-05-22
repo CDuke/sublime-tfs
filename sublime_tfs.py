@@ -222,7 +222,7 @@ class TfsAnnotateCommand(sublime_plugin.TextCommand):
 
 class TfsEventListener(sublime_plugin.EventListener):
     def on_modified(self, view):
-        if manager.auto_checkout_enabled:
+        if not manager.auto_checkout_enabled:
             return
         path = get_unicode_filename(view)
         if not (path is None):

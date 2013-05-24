@@ -80,6 +80,7 @@ class TfsManager(object):
         except Exception:
             print("commands: %s" % commands)
             print("is_graph: %s" % is_graph)
+            raise
 
     def launch_Without_Console(self, command):
         """Launches 'command' windowless and waits until finished"""

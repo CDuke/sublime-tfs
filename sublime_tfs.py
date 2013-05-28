@@ -1,7 +1,7 @@
-﻿import sublime, sublime_plugin, re
+﻿import sublime
+import sublime_plugin
 import threading
 import locale
-import shlex
 import subprocess
 import os
 import stat
@@ -9,10 +9,6 @@ import sys
 
 def is_python_3_version():
     return sys.hexversion > 0x03000000
-
-def get_unicode_filename(view):
-    file_name = view.file_name() if is_python_3_version() else unicode(view.file_name())
-    return file_name.encode(locale.getpreferredencoding()) if not file_name is None else None;
 
 class TfsManager(object):
     def __init__(self):
@@ -68,6 +64,8 @@ class TfsManager(object):
     def run_command(self, command, path, is_graph = False, is_tfpt = False):
         try:
             commands = [self.tfpt_path if is_tfpt else self.tf_path, command, path]
+            if (not is_python_3_version()):
+                commands = map(lambda s: s.encode(locale.getpreferredencoding()), commands)
             if (is_graph):
                 p = subprocess.Popen(commands, cwd=self.cwd)
             else:
@@ -131,7 +129,7 @@ class ThreadProgress():
 
 class TfsCheckoutCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = get_unicode_filename(self.view)
+        path = self.view.file_name()
         if not (path is None):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.checkout)
@@ -140,7 +138,7 @@ class TfsCheckoutCommand(sublime_plugin.TextCommand):
 
 class TfsUndoCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = get_unicode_filename(self.view)
+        path = self.view.file_name()
         if not (path is None):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.undo)
@@ -149,7 +147,7 @@ class TfsUndoCommand(sublime_plugin.TextCommand):
 
 class TfsCheckinCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = get_unicode_filename(self.view)
+        path = self.view.file_name()
         if not (path is None):
             if (not isReadonly(path)):
                 self.view.run_command('save')
@@ -160,7 +158,7 @@ class TfsCheckinCommand(sublime_plugin.TextCommand):
 
 class TfsHistoryCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = get_unicode_filename(self.view)
+        path = self.view.file_name()
         if not (path is None):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.history)
@@ -169,7 +167,7 @@ class TfsHistoryCommand(sublime_plugin.TextCommand):
 
 class TfsAddCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = get_unicode_filename(self.view)
+        path = self.view.file_name()
         if not (path is None):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.add)
@@ -178,7 +176,7 @@ class TfsAddCommand(sublime_plugin.TextCommand):
 
 class TfsGetLatestCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = get_unicode_filename(self.view)
+        path = self.view.file_name()
         if not (path is None):
             if (not isReadonly(path)):
                 self.view.run_command('save')
@@ -189,7 +187,7 @@ class TfsGetLatestCommand(sublime_plugin.TextCommand):
 
 class TfsDifferenceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = get_unicode_filename(self.view)
+        path = self.view.file_name()
         if not (path is None):
             if (not isReadonly(path)):
                 self.view.run_command('save')
@@ -200,7 +198,7 @@ class TfsDifferenceCommand(sublime_plugin.TextCommand):
 
 class TfsDeleteCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = get_unicode_filename(self.view)
+        path = self.view.file_name()
         if not (path is None):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.delete)
@@ -209,7 +207,7 @@ class TfsDeleteCommand(sublime_plugin.TextCommand):
 
 class TfsStatusCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = get_unicode_filename(self.view)
+        path = self.view.file_name()
         if not (path is None):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.status)
@@ -218,7 +216,7 @@ class TfsStatusCommand(sublime_plugin.TextCommand):
 
 class TfsAnnotateCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = get_unicode_filename(self.view)
+        path = self.view.file_name()
         if not (path is None):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.annotate)
@@ -232,7 +230,7 @@ class TfsEventListener(sublime_plugin.EventListener):
     def on_modified(self, view):
         if not self.manager.auto_checkout_enabled:
             return
-        path = get_unicode_filename(view)
+        path = self.view.file_name()
         if not (path is None):
             if isReadonly(path):
                 thread = TfsRunnerThread(path, self.manager.auto_checkout)

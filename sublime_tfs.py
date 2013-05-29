@@ -230,7 +230,7 @@ class TfsEventListener(sublime_plugin.EventListener):
     def on_modified(self, view):
         if not self.manager.auto_checkout_enabled:
             return
-        path = self.view.file_name()
+        path = view.file_name()
         if not (path is None):
             if isReadonly(path):
                 thread = TfsRunnerThread(path, self.manager.auto_checkout)

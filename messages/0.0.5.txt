@@ -1,0 +1,4 @@
+Sublime TFS 0.0.5 Changelog:
+
+Features:
+- Add support Sublime text 3

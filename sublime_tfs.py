@@ -10,6 +10,11 @@ import sys
 def is_python_3_version():
     return sys.hexversion > 0x03000000
 
+def get_path(view):
+    if (not is_python_3_version()):
+        return view.file_name().encode(locale.getpreferredencoding())
+    return view.file_name()
+
 class TfsManager(object):
     def __init__(self):
         self.name = 'sublime_tfs'
@@ -64,21 +69,48 @@ class TfsManager(object):
     def run_command(self, command, path, is_graph = False, is_tfpt = False):
         try:
             commands = [self.tfpt_path if is_tfpt else self.tf_path, command, path]
-            if (not is_python_3_version()):
-                commands = map(lambda s: s.encode(locale.getpreferredencoding()), commands)
-            if (is_graph):
-                p = subprocess.Popen(commands, cwd=self.cwd)
-            else:
-                p = self.launch_Without_Console(commands)
-            (out, err) = p.communicate()
-            if p.returncode != 0:
-                return (False, err if not err is None else "Unknown error")
-            else:
-                return (True, out)
+            if (is_python_3_version()):
+                return self.run_command_py3(commands, is_graph)
+
+            return self.run_command_py2(commands, is_graph)
         except Exception:
             print("commands: %s" % commands)
             print("is_graph: %s" % is_graph)
             raise
+
+    def run_command_py3(self, commands, is_graph):
+        if (is_graph):
+            p = subprocess.Popen(commands, cwd=self.cwd)
+        else:
+            p = self.launch_Without_Console(commands)
+        (out, err) = p.communicate()
+        if p.returncode != 0:
+            err = err.decode(locale.getpreferredencoding()) if not err is None else "Unknown error"
+            return (False, err)
+        else:
+            out = out.decode(locale.getpreferredencoding()) if not out is None else None
+            return (True, out)
+
+    def run_command_py2(self, commands, is_graph):
+        commands = map(lambda s: s.encode(locale.getpreferredencoding()), commands)
+        if (is_graph):
+            p = subprocess.Popen(commands, cwd=self.cwd)
+        else:
+            p = self.launch_Without_Console(commands)
+        (out, err) = p.communicate()
+        if p.returncode != 0:
+            try:
+                err = err.encode(locale.getpreferredencoding()) if not err is None else "Unknown error"
+            except UnicodeDecodeError:
+                err = err if not err is None else "Unknown error"
+                pass
+            return (False, err)
+        else:
+            try:
+                out = out.encode(locale.getpreferredencoding()) if not out is None else None
+            except UnicodeDecodeError:
+                pass
+            return (True, out)
 
     def launch_Without_Console(self, command):
         """Launches 'command' windowless and waits until finished"""
@@ -221,7 +253,7 @@ class TfsAnnotateCommand(sublime_plugin.TextCommand):
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.annotate)
             thread.start()
-            ThreadProgress(self.view, thread, "Annotating...")
+            ThreadProgress(self.view, thread, "Annotating...", "Annotate done")
 
 class TfsEventListener(sublime_plugin.EventListener):
     def __init__(self):

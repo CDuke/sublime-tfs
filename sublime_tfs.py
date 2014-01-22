@@ -256,10 +256,11 @@ class TfsAnnotateCommand(sublime_plugin.TextCommand):
             ThreadProgress(self.view, thread, "Annotating...", "Annotate done")
 
 class TfsEventListener(sublime_plugin.EventListener):
-    def __init__(self):
-        self.manager = TfsManager()
+    def on_activated(self, view):
+        if not hasattr(self, 'manager'):
+            self.manager = TfsManager()
 
-    def on_modified(self, view):
+    def on_pre_save(self, view):
         if not self.manager.auto_checkout_enabled:
             return
         path = view.file_name()
@@ -268,6 +269,9 @@ class TfsEventListener(sublime_plugin.EventListener):
                 thread = TfsRunnerThread(path, self.manager.auto_checkout)
                 thread.start()
                 ThreadProgress(view, thread, "Checkout...", "Checkout success: %s" % path)
+                thread.join(5) #5 seconds. It's enough for checkout.
+                if thread.isAlive():
+                    sublime.set_timeout(lambda: "Checkout failed. Too long operation")
 
 def isReadonly(p_path):
     try:

@@ -1,0 +1,10 @@
+[
+	{ "caption": "-", "id": "end" },
+	{
+		"command": "tfs_dirs_get_latest",
+		"caption": "Get Latest Version",
+		"args": {
+			"dirs": []
+		}
+	}
+]

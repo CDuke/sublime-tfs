@@ -10,7 +10,7 @@
             { "command": "tfs_checkin", "caption": "Checkin..." },
             { "command": "tfs_history", "caption": "History..." },
             { "command": "tfs_add", "caption": "Add" },
-            { "command": "tfs_get_latest", "caption": "Get latest" },
+            { "command": "tfs_get_latest", "caption": "Get latest version" },
             { "command": "tfs_difference", "caption": "Compare with latest..." },
             { "command": "tfs_delete", "caption": "Delete" },
             { "command": "tfs_status", "caption": "Status" },

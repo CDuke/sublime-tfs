@@ -11,9 +11,19 @@ def is_python_3_version():
     return sys.hexversion > 0x03000000
 
 def get_path(view):
-    if (not is_python_3_version()):
-        return view.file_name().encode(locale.getpreferredencoding())
-    return view.file_name()
+    return view.file_name() if is_python_3_version() else view.file_name().encode(locale.getpreferredencoding())
+
+def encode_string(s, default=None):
+    try:
+        return s.encode(locale.getpreferredencoding()) if not s is None else default
+    except UnicodeEncodeError:
+        return s if not s is None else default
+
+def decode_string(s, default=None):
+    try:
+        return s.decode(locale.getpreferredencoding()) if not s is None else default
+    except UnicodeDecodeError:
+        return s if not s is None else default
 
 class TfsManager(object):
     def __init__(self):
@@ -29,97 +39,71 @@ class TfsManager(object):
 
     def checkout(self, path):
         if self.auto_checkout_enabled or sublime.ok_cancel_dialog("Checkout " + path + "?"):
-            return self.run_command("checkout", path)
+            return self.run_command(["checkout"], path)
         else:
             return (False, "Checkout is cancelled by user!")
 
     def checkin(self, path):
-        return self.run_command("checkin", path, True)
+        return self.run_command(["checkin"], path, True)
 
     def undo(self, path):
-        return self.run_command("undo", path)
+        return self.run_command(["undo"], path)
 
     def history(self, path):
-        return self.run_command("history", path, True)
+        return self.run_command(["history"], path, True)
 
     def add(self, path):
-        return self.run_command("add", path)
+        return self.run_command(["add"], path)
 
     def get_latest(self, path):
-        return self.run_command("get", path)
+        return self.run_command(["get"], path)
+
+    def dir_get_latest(self, path):
+        return self.run_command(["get", "/recursive"], path)
 
     def difference(self, path):
-        return self.run_command("difference", path, True)
+        return self.run_command(["difference"], path, True)
 
     def delete(self, path):
-        return self.run_command("delete", path)
+        return self.run_command(["delete"], path)
 
     def status(self, path):
-        return self.run_command("status", path)
+        return self.run_command(["status"], path)
 
     def annotate(self, path):
-        return self.run_command("annotate", path, True, True)
+        return self.run_command(["annotate"], path, True, True)
 
     def auto_checkout(self, path):
-        if self.status(path)[0]:
-            return self.checkout(path)
-        else:
-            return (False, "")
+        return self.checkout(path) if self.status(path)[0] else (False, "")
 
     def run_command(self, command, path, is_graph = False, is_tfpt = False):
         try:
-            commands = [self.tfpt_path if is_tfpt else self.tf_path, command, path]
+            commands = [self.tfpt_path if is_tfpt else self.tf_path] + command + [path]
             if (is_python_3_version()):
-                return self.run_command_py3(commands, is_graph)
-
-            return self.run_command_py2(commands, is_graph)
+                return self.run_command_inner(commands, is_graph, decode_string)
+            else:
+                commands = map(lambda s: encode_string(s, s), commands)
+                return self.run_command_inner(commands, is_graph, encode_string)
         except Exception:
             print("commands: %s" % commands)
             print("is_graph: %s" % is_graph)
             raise
 
-    def run_command_py3(self, commands, is_graph):
+    def run_command_inner(self, commands, is_graph, converter):
         if (is_graph):
             p = subprocess.Popen(commands, cwd=self.cwd)
         else:
-            p = self.launch_Without_Console(commands)
+            p = self.launch_without_console(commands)
         (out, err) = p.communicate()
-        if p.returncode != 0:
-            err = err.decode(locale.getpreferredencoding()) if not err is None else "Unknown error"
-            return (False, err)
-        else:
-            out = out.decode(locale.getpreferredencoding()) if not out is None else None
-            return (True, out)
+        return (True, converter(out, None)) if (p.returncode == 0) else (False, converter(err, "Unknown error"))
 
-    def run_command_py2(self, commands, is_graph):
-        commands = map(lambda s: s.encode(locale.getpreferredencoding()), commands)
-        if (is_graph):
-            p = subprocess.Popen(commands, cwd=self.cwd)
-        else:
-            p = self.launch_Without_Console(commands)
-        (out, err) = p.communicate()
-        if p.returncode != 0:
-            try:
-                err = err.encode(locale.getpreferredencoding()) if not err is None else "Unknown error"
-            except UnicodeDecodeError:
-                err = err if not err is None else "Unknown error"
-                pass
-            return (False, err)
-        else:
-            try:
-                out = out.encode(locale.getpreferredencoding()) if not out is None else None
-            except UnicodeDecodeError:
-                pass
-            return (True, out)
-
-    def launch_Without_Console(self, command):
+    def launch_without_console(self, command):
         """Launches 'command' windowless and waits until finished"""
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         return subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=self.cwd, startupinfo=startupinfo)
 
 class TfsRunnerThread(threading.Thread):
-    """docstring for ClearLogTread"""
     def __init__(self, path, method):
         super(TfsRunnerThread, self).__init__()
         self.method = method
@@ -181,7 +165,7 @@ class TfsCheckinCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
         if not (path is None):
-            if (not isReadonly(path)):
+            if (not is_readonly(path)):
                 self.view.run_command('save')
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.checkin)
@@ -210,18 +194,39 @@ class TfsGetLatestCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
         if not (path is None):
-            if (not isReadonly(path)):
+            if (not is_readonly(path)):
                 self.view.run_command('save')
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.get_latest)
             thread.start()
             ThreadProgress(self.view, thread, "Getting...", "Get latest success: %s" % path)
 
+class TfsDirGetLatestCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        path = self.view.file_name()
+        if not (path is None):
+            path = os.path.dirname(path)
+            manager = TfsManager()
+            thread = TfsRunnerThread(path, manager.dir_get_latest)
+            thread.start()
+            ThreadProgress(self.view, thread, "Getting dir: %s..." % path, "Directory get latest success: %s" % path)
+
+class TfsDirsGetLatestCommand(sublime_plugin.TextCommand):
+    def is_visible(self, dirs):
+        return (dirs != None) and (len(dirs) > 0) and all(os.path.isdir(item) for item in dirs)
+
+    def run(self, edit, dirs):
+        path = dirs[0] # currently do GLV for first selected directory only
+        manager = TfsManager()
+        thread = TfsRunnerThread(path, manager.dir_get_latest)
+        thread.start()
+        ThreadProgress(self.view, thread, "Getting dir: %s..." % path, "Directory get latest success: %s" % path)
+
 class TfsDifferenceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
         if not (path is None):
-            if (not isReadonly(path)):
+            if (not is_readonly(path)):
                 self.view.run_command('save')
             manager = TfsManager()
             thread = TfsRunnerThread(path, manager.difference)
@@ -265,7 +270,7 @@ class TfsEventListener(sublime_plugin.EventListener):
             return
         path = view.file_name()
         if not (path is None):
-            if isReadonly(path):
+            if is_readonly(path):
                 thread = TfsRunnerThread(path, self.manager.auto_checkout)
                 thread.start()
                 ThreadProgress(view, thread, "Checkout...", "Checkout success: %s" % path)
@@ -273,10 +278,8 @@ class TfsEventListener(sublime_plugin.EventListener):
                 if thread.isAlive():
                     sublime.set_timeout(lambda: "Checkout failed. Too long operation")
 
-def isReadonly(p_path):
+def is_readonly(path):
     try:
-        fileAttrs = os.stat(p_path)
-        fileAtt = fileAttrs[0]
-        return not fileAtt & stat.S_IWRITE
+        return not os.stat(path)[0] & stat.S_IWRITE
     except WindowsError:
         pass

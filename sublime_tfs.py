@@ -1,4 +1,4 @@
-﻿import sublime
+import sublime
 import sublime_plugin
 import threading
 import locale
@@ -32,7 +32,6 @@ class TfsManager(object):
         self.tf_path = settings.get("tf_path")
         self.tfpt_path = settings.get("tfpt_path")
         self.auto_checkout_enabled = settings.get("auto_checkout_enabled", True)
-        self.cwd = os.path.expandvars('%HOMEDRIVE%\\')
 
     def is_under_tfs(self, path):
         return self.status(path)
@@ -78,30 +77,32 @@ class TfsManager(object):
 
     def run_command(self, command, path, is_graph = False, is_tfpt = False):
         try:
-            commands = [self.tfpt_path if is_tfpt else self.tf_path] + command + [path]
+            executable = self.tfpt_path if is_tfpt else self.tf_path
+            commands = [executable] + command + [path]
+            working_dir = os.path.dirname(executable)
             if (is_python_3_version()):
-                return self.run_command_inner(commands, is_graph, decode_string)
+                return self.run_command_inner(commands, working_dir, is_graph, decode_string)
             else:
                 commands = map(lambda s: encode_string(s, s), commands)
-                return self.run_command_inner(commands, is_graph, encode_string)
+                return self.run_command_inner(commands, working_dir, is_graph, encode_string)
         except Exception:
             print("commands: %s" % commands)
             print("is_graph: %s" % is_graph)
             raise
 
-    def run_command_inner(self, commands, is_graph, converter):
+    def run_command_inner(self, commands, working_dir, is_graph, converter):
         if (is_graph):
-            p = subprocess.Popen(commands, cwd=self.cwd)
+            p = subprocess.Popen(commands, cwd=working_dir)
         else:
-            p = self.launch_without_console(commands)
+            p = self.launch_without_console(commands, working_dir)
         (out, err) = p.communicate()
         return (True, converter(out, None)) if (p.returncode == 0) else (False, converter(err, "Unknown error"))
 
-    def launch_without_console(self, command):
+    def launch_without_console(self, command, working_dir):
         """Launches 'command' windowless and waits until finished"""
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        return subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=self.cwd, startupinfo=startupinfo)
+        return subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=working_dir, startupinfo=startupinfo)
 
 class TfsRunnerThread(threading.Thread):
     def __init__(self, path, method):
@@ -201,16 +202,6 @@ class TfsGetLatestCommand(sublime_plugin.TextCommand):
             thread.start()
             ThreadProgress(self.view, thread, "Getting...", "Get latest success: %s" % path)
 
-class TfsDirGetLatestCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        path = self.view.file_name()
-        if not (path is None):
-            path = os.path.dirname(path)
-            manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.dir_get_latest)
-            thread.start()
-            ThreadProgress(self.view, thread, "Getting dir: %s..." % path, "Directory get latest success: %s" % path)
-
 class TfsDirsGetLatestCommand(sublime_plugin.TextCommand):
     def is_visible(self, dirs):
         return (dirs != None) and (len(dirs) > 0) and all(os.path.isdir(item) for item in dirs)
@@ -261,22 +252,20 @@ class TfsAnnotateCommand(sublime_plugin.TextCommand):
             ThreadProgress(self.view, thread, "Annotating...", "Annotate done")
 
 class TfsEventListener(sublime_plugin.EventListener):
-    def on_activated(self, view):
+    def on_pre_save(self, view):
         if not hasattr(self, 'manager'):
             self.manager = TfsManager()
 
-    def on_pre_save(self, view):
-        if not self.manager.auto_checkout_enabled:
-            return
-        path = view.file_name()
-        if not (path is None):
-            if is_readonly(path):
-                thread = TfsRunnerThread(path, self.manager.auto_checkout)
-                thread.start()
-                ThreadProgress(view, thread, "Checkout...", "Checkout success: %s" % path)
-                thread.join(5) #5 seconds. It's enough for checkout.
-                if thread.isAlive():
-                    sublime.set_timeout(lambda: "Checkout failed. Too long operation")
+        if self.manager.auto_checkout_enabled:
+            path = view.file_name()
+            if not (path is None):
+                if is_readonly(path):
+                    thread = TfsRunnerThread(path, self.manager.auto_checkout)
+                    thread.start()
+                    ThreadProgress(view, thread, "Checkout...", "Checkout success: %s" % path)
+                    thread.join(5) #5 seconds. It's enough for auto-checkout.
+                    if thread.isAlive():
+                        sublime.set_timeout(lambda: "Checkout failed. Too long operation")
 
 def is_readonly(path):
     try:

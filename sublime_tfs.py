@@ -202,7 +202,10 @@ class TfsGetLatestCommand(sublime_plugin.TextCommand):
             thread.start()
             ThreadProgress(self.view, thread, "Getting...", "Get latest success: %s" % path)
 
-class TfsDirsGetLatestCommand(sublime_plugin.TextCommand):
+class TfsDirsGetLatestCommand(sublime_plugin.WindowCommand):
+    """
+    SideBar command must be sublime_plugin.WindowCommand
+    """
     def is_visible(self, dirs):
         return (dirs != None) and (len(dirs) > 0) and all(os.path.isdir(item) for item in dirs)
 
@@ -211,7 +214,7 @@ class TfsDirsGetLatestCommand(sublime_plugin.TextCommand):
         manager = TfsManager()
         thread = TfsRunnerThread(path, manager.dir_get_latest)
         thread.start()
-        ThreadProgress(self.view, thread, "Getting dir: %s..." % path, "Directory get latest success: %s" % path)
+        ThreadProgress(self.window.active_view(), thread, "Getting dir: %s..." % path, "Directory get latest success: %s" % path)
 
 class TfsDifferenceCommand(sublime_plugin.TextCommand):
     def run(self, edit):

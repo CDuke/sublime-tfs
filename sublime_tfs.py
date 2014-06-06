@@ -209,7 +209,7 @@ class TfsDirsGetLatestCommand(sublime_plugin.WindowCommand):
     def is_visible(self, dirs):
         return (dirs != None) and (len(dirs) > 0) and all(os.path.isdir(item) for item in dirs)
 
-    def run(self, edit, dirs):
+    def run(self, dirs):
         path = dirs[0] # currently do GLV for first selected directory only
         manager = TfsManager()
         thread = TfsRunnerThread(path, manager.dir_get_latest)
@@ -269,6 +269,15 @@ class TfsEventListener(sublime_plugin.EventListener):
                     thread.join(5) #5 seconds. It's enough for auto-checkout.
                     if thread.isAlive():
                         sublime.set_timeout(lambda: "Checkout failed. Too long operation")
+
+class TfsCheckoutOpenFilesCommand(sublime_plugin.WindowCommand):
+    """
+    Checout all opened files
+    """
+
+    def run(self):
+        for view in self.window.views():
+            view.run_command('tfs_checkout')
 
 def is_readonly(path):
     try:

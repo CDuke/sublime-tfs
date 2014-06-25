@@ -1,4 +1,3 @@
-Sublime TFS
 # [Sublime TFS](https://bitbucket.org/CDuke/sublime-tfs)
 
 Sublime TFS is a plugin for the wonderful text editor [Sublime Text 2](http://sublimetext.com/2) and [Sublime Text 3](http://sublimetext.com/3).

@@ -86,8 +86,7 @@ class TfsManager(object):
                 commands = map(lambda s: encode_string(s, s), commands)
                 return self.run_command_inner(commands, working_dir, is_graph, encode_string)
         except Exception:
-            print("commands: %s" % commands)
-            print("is_graph: %s" % is_graph)
+            print("commands: [%s], is_graph: [%s], working_dir: [%s]" % (commands, is_graph, working_dir))
             raise
 
     def run_command_inner(self, commands, working_dir, is_graph, converter):

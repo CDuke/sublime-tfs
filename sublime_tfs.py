@@ -127,7 +127,10 @@ class ThreadProgress():
 
     def run(self, i):
         if not self.thread.is_alive():
-            self.view.erase_status('tfs')
+            if self.view:
+                self.view.erase_status('tfs')
+            else:
+                sublime.status_message('')
             if not self.thread.success:
                 sublime.status_message(self.thread.message)
                 return
@@ -136,7 +139,11 @@ class ThreadProgress():
 
         before = i % self.size
         after = (self.size - 1) - before
-        self.view.set_status('tfs', '%s [%s=%s]' % (self.message, ' ' * before, ' ' * after))
+        msg = '%s [%s=%s]' % (self.message, ' ' * before, ' ' * after)
+        if self.view:
+            self.view.set_status('tfs', msg)
+        else:
+            sublime.status_message(msg)
         if not after:
             self.addend = -1
         if not before:

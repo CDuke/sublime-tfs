@@ -1,30 +1,30 @@
 import sublime
 import sublime_plugin
+# ------------------------------
 import threading
 import locale
 import subprocess
 import os
 import stat
 import sys
-
-def is_python_3_version():
-    return sys.hexversion > 0x03000000
-
-def get_path(view):
-    return view.file_name() if is_python_3_version() else view.file_name().encode(locale.getpreferredencoding())
-
-def encode_string(s, default=None):
+# ------------------------------
+OS_ENCODING = locale.getpreferredencoding()
+IS_PYTHON_2 = (sys.hexversion < 0x03000000)
+IS_PYTHON_3 = (sys.hexversion > 0x03000000)
+# ------------------------------
+def encode_to_OS(s, default=None):
+    return s.encode(OS_ENCODING) if not s is None else default
+def encode_all_to_OS(strings):
+    return map(lambda s: encode_to_OS(s), strings)
+def decode_from_OS(s, default=None):
+    return s.decode(OS_ENCODING) if not s is None else default
+# ------------------------------
+def is_readonly(path):
     try:
-        return s.encode(locale.getpreferredencoding()) if not s is None else default
-    except UnicodeEncodeError:
-        return s if not s is None else default
-
-def decode_string(s, default=None):
-    try:
-        return s.decode(locale.getpreferredencoding()) if not s is None else default
-    except UnicodeDecodeError:
-        return s if not s is None else default
-
+        return not os.stat(path)[0] & stat.S_IWRITE
+    except WindowsError:
+        pass
+# ------------------------------------------------------------
 class TfsManager(object):
     def __init__(self):
         self.name = 'sublime_tfs'
@@ -77,32 +77,33 @@ class TfsManager(object):
 
     def run_command(self, command, path, is_graph = False, is_tfpt = False):
         try:
+            current_dir = os.getcwd()
             executable = self.tfpt_path if is_tfpt else self.tf_path
             commands = [executable] + command + [path]
             working_dir = os.path.dirname(executable)
-            if (is_python_3_version()):
-                return self.run_command_inner(commands, working_dir, is_graph, decode_string)
-            else:
-                commands = map(lambda s: encode_string(s, s), commands)
-                return self.run_command_inner(commands, working_dir, is_graph, encode_string)
+            os.chdir(working_dir)
+            return self.__run_command(commands, is_graph)
         except Exception:
-            print("commands: [%s], is_graph: [%s], working_dir: [%s]" % (commands, is_graph, working_dir))
+            print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph))
             raise
+        finally:
+            os.chdir(current_dir)
 
-    def run_command_inner(self, commands, working_dir, is_graph, converter):
+    def __run_command(self, commands, is_graph):
+        if IS_PYTHON_2:
+            commands = encode_all_to_OS(commands) # popen fails on unicode in py2.7
         if (is_graph):
-            p = subprocess.Popen(commands, cwd=working_dir)
+            p = subprocess.Popen(commands)
         else:
-            p = self.launch_without_console(commands, working_dir)
+            startup_info = subprocess.STARTUPINFO()
+            startup_info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            p = subprocess.Popen(commands, stderr=subprocess.PIPE, stdout=subprocess.PIPE, startupinfo=startup_info)
         (out, err) = p.communicate()
-        return (True, converter(out, None)) if (p.returncode == 0) else (False, converter(err, "Unknown error"))
-
-    def launch_without_console(self, command, working_dir):
-        """Launches 'command' windowless and waits until finished"""
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        return subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=working_dir, startupinfo=startupinfo)
-
+        if p.returncode == 0:
+            return True, decode_from_OS(out, None)
+        else:
+            return False, decode_from_OS(err, "Unknown error")
+# ------------------------------------------------------------
 class TfsRunnerThread(threading.Thread):
     def __init__(self, path, method):
         super(TfsRunnerThread, self).__init__()
@@ -113,7 +114,7 @@ class TfsRunnerThread(threading.Thread):
 
     def run(self):
         (self.success, self.message) = self.method(self.m_path)
-
+# ------------------------------------------------------------
 class ThreadProgress():
     def __init__(self, view, thread, message, success_message = None):
         self.view = view
@@ -149,7 +150,7 @@ class ThreadProgress():
             self.addend = 1
         i += self.addend
         sublime.set_timeout(lambda: self.run(i), 100)
-
+# ------------------------------------------------------------
 class TfsCheckoutCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
@@ -158,7 +159,6 @@ class TfsCheckoutCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.checkout)
             thread.start()
             ThreadProgress(self.view, thread, "Checkout...", "Checkout success: %s" % path)
-
 class TfsUndoCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
@@ -167,7 +167,6 @@ class TfsUndoCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.undo)
             thread.start()
             ThreadProgress(self.view, thread, "Undo...", "Undo success: %s" % path)
-
 class TfsCheckinCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
@@ -178,7 +177,6 @@ class TfsCheckinCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.checkin)
             thread.start()
             ThreadProgress(self.view, thread, "Checkin...", "Checkin success: %s" % path)
-
 class TfsHistoryCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
@@ -187,7 +185,6 @@ class TfsHistoryCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.history)
             thread.start()
             ThreadProgress(self.view, thread, "History...", "History success: %s" % path)
-
 class TfsAddCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
@@ -196,7 +193,6 @@ class TfsAddCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.add)
             thread.start()
             ThreadProgress(self.view, thread, "Adding...", "Added success: %s" % path)
-
 class TfsGetLatestCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
@@ -207,7 +203,6 @@ class TfsGetLatestCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.get_latest)
             thread.start()
             ThreadProgress(self.view, thread, "Getting...", "Get latest success: %s" % path)
-
 class TfsDirsGetLatestCommand(sublime_plugin.WindowCommand):
     """
     SideBar command must be sublime_plugin.WindowCommand
@@ -221,7 +216,6 @@ class TfsDirsGetLatestCommand(sublime_plugin.WindowCommand):
         thread = TfsRunnerThread(path, manager.dir_get_latest)
         thread.start()
         ThreadProgress(self.window.active_view(), thread, "Getting dir: %s..." % path, "Directory get latest success: %s" % path)
-
 class TfsDifferenceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
@@ -232,7 +226,6 @@ class TfsDifferenceCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.difference)
             thread.start()
             ThreadProgress(self.view, thread, "Comparing...", "Comparing success: %s" % path)
-
 class TfsDeleteCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
@@ -241,7 +234,6 @@ class TfsDeleteCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.delete)
             thread.start()
             ThreadProgress(self.view, thread, "Deleting...", "Delete success: %s" % path)
-
 class TfsStatusCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
@@ -250,7 +242,6 @@ class TfsStatusCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.status)
             thread.start()
             ThreadProgress(self.view, thread, "Getting status...")
-
 class TfsAnnotateCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
@@ -259,7 +250,6 @@ class TfsAnnotateCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.annotate)
             thread.start()
             ThreadProgress(self.view, thread, "Annotating...", "Annotate done")
-
 class TfsEventListener(sublime_plugin.EventListener):
     def on_pre_save(self, view):
         if not hasattr(self, 'manager'):
@@ -275,7 +265,6 @@ class TfsEventListener(sublime_plugin.EventListener):
                     thread.join(5) #5 seconds. It's enough for auto-checkout.
                     if thread.isAlive():
                         sublime.set_timeout(lambda: "Checkout failed. Too long operation")
-
 class TfsCheckoutOpenFilesCommand(sublime_plugin.WindowCommand):
     """
     Checout all opened files
@@ -284,9 +273,4 @@ class TfsCheckoutOpenFilesCommand(sublime_plugin.WindowCommand):
     def run(self):
         for view in self.window.views():
             view.run_command('tfs_checkout')
-
-def is_readonly(path):
-    try:
-        return not os.stat(path)[0] & stat.S_IWRITE
-    except WindowsError:
-        pass
+# ------------------------------------------------------------

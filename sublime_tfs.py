@@ -100,6 +100,7 @@ class TfsManager(object):
             p = subprocess.Popen(commands, stderr=subprocess.PIPE, stdout=subprocess.PIPE, startupinfo=startup_info)
         (out, err) = p.communicate()
         if p.returncode == 0:
+            print(out)
             return True, decode_from_OS(out, None)
         else:
             return False, decode_from_OS(err, "Unknown error")
@@ -126,24 +127,32 @@ class ThreadProgress():
         sublime.set_timeout(lambda: self.run(0), 100)
 
     def run(self, i):
+        # ------------------------------
         if not self.thread.is_alive():
+            # ------------------------------
             if self.view:
                 self.view.erase_status('tfs')
             else:
                 sublime.status_message('')
+            # ------------------------------
             if not self.thread.success:
                 sublime.status_message(self.thread.message)
-                return
-            sublime.status_message(self.success_message if not self.success_message is None else self.thread.message)
+                # sublime.message_dialog(self.thread.message)
+            else:
+                sublime.status_message(self.success_message if not self.success_message is None else self.thread.message)
+                # sublime.message_dialog(self.success_message if not self.success_message is None else self.thread.message)
+            # ------------------------------
             return
-
+        # ------------------------------
         before = i % self.size
         after = (self.size - 1) - before
         msg = '%s [%s=%s]' % (self.message, ' ' * before, ' ' * after)
+        # ------------------------------
         if self.view:
             self.view.set_status('tfs', msg)
         else:
             sublime.status_message(msg)
+        # ------------------------------
         if not after:
             self.addend = -1
         if not before:
@@ -267,7 +276,7 @@ class TfsEventListener(sublime_plugin.EventListener):
                         sublime.set_timeout(lambda: "Checkout failed. Too long operation")
 class TfsCheckoutOpenFilesCommand(sublime_plugin.WindowCommand):
     """
-    Checout all opened files
+    Checkout all opened files
     """
 
     def run(self):

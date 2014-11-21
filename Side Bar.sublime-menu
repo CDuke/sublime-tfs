@@ -1,10 +1,15 @@
 [
 	{ "caption": "-", "id": "end" },
+	{ "caption": "-", "id": "sublime_tfs_start" },
 	{
-		"command": "tfs_dirs_get_latest",
+		"command": "tfs_dir_get_latest",
 		"caption": "Get Latest Version",
-		"args": {
-			"dirs": []
-		}
-	}
+		"args": { "dirs": [] }
+	},
+	{
+		"command": "tfs_dir_checkin",
+		"caption": "Checkin...",
+		"args": { "dirs": [] }
+	},
+	{ "caption": "-", "id": "sublime_tfs_end" }
 ]

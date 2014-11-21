@@ -43,7 +43,7 @@ class TfsManager(object):
             return (False, "Checkout is cancelled by user!")
 
     def checkin(self, path):
-        return self.run_command(["checkin"], path, True)
+        return self.run_command(["checkin", "/recursive"], path, True)
 
     def undo(self, path):
         return self.run_command(["undo"], path)
@@ -55,9 +55,6 @@ class TfsManager(object):
         return self.run_command(["add"], path)
 
     def get_latest(self, path):
-        return self.run_command(["get"], path)
-
-    def dir_get_latest(self, path):
         return self.run_command(["get", "/recursive"], path)
 
     def difference(self, path):
@@ -82,9 +79,10 @@ class TfsManager(object):
             commands = [executable] + command + [path]
             working_dir = os.path.dirname(executable)
             os.chdir(working_dir)
+            #!_! print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
             return self.__run_command(commands, is_graph)
         except Exception:
-            print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph))
+            print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
             raise
         finally:
             os.chdir(current_dir)
@@ -186,6 +184,14 @@ class TfsCheckinCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.checkin)
             thread.start()
             ThreadProgress(self.view, thread, "Checkin...", "Checkin success: %s" % path)
+class TfsDirCheckinCommand(sublime_plugin.WindowCommand): # used in SideBar - must be WindowCommand
+    def is_visible(self, dirs):
+        return (dirs != None) and (len(dirs) > 0) and all(os.path.isdir(item) for item in dirs)
+    def run(self, dirs):
+        path = dirs[0] # do Checkin for first selected directory only
+        thread = TfsRunnerThread(path, TfsManager().checkin)
+        thread.start()
+        ThreadProgress(self.window.active_view(), thread, "Checkin dir: %s..." % path, "Checkin success: %s" % path)
 class TfsHistoryCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
@@ -212,17 +218,13 @@ class TfsGetLatestCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, manager.get_latest)
             thread.start()
             ThreadProgress(self.view, thread, "Getting...", "Get latest success: %s" % path)
-class TfsDirsGetLatestCommand(sublime_plugin.WindowCommand):
-    """
-    SideBar command must be sublime_plugin.WindowCommand
-    """
+class TfsDirGetLatestCommand(sublime_plugin.WindowCommand): # used in SideBar - must be WindowCommand
     def is_visible(self, dirs):
         return (dirs != None) and (len(dirs) > 0) and all(os.path.isdir(item) for item in dirs)
-
     def run(self, dirs):
-        path = dirs[0] # currently do GLV for first selected directory only
+        path = dirs[0] # do GLV for first selected directory only
         manager = TfsManager()
-        thread = TfsRunnerThread(path, manager.dir_get_latest)
+        thread = TfsRunnerThread(path, manager.get_latest)
         thread.start()
         ThreadProgress(self.window.active_view(), thread, "Getting dir: %s..." % path, "Directory get latest success: %s" % path)
 class TfsDifferenceCommand(sublime_plugin.TextCommand):
@@ -278,7 +280,6 @@ class TfsCheckoutOpenFilesCommand(sublime_plugin.WindowCommand):
     """
     Checkout all opened files
     """
-
     def run(self):
         for view in self.window.views():
             view.run_command('tfs_checkout')

@@ -1,5 +1,17 @@
 {
-    "tf_path": "C:/Program Files (x86)/Microsoft Visual Studio 10.0/Common7/IDE/TF.exe",
-    "tfpt_path": "C:/Program Files (x86)/Microsoft Team Foundation Server 2010 Power Tools/TFPT.exe",
-    "auto_checkout_enabled" : true
+	// specifies path to Team Foundation (TF.exe). Mandatory for all commands.
+	"tf_path": "C:/Program Files (x86)/Microsoft Visual Studio 10.0/Common7/IDE/TF.exe",
+
+	// specifies path to TFS Power Tools (TFPT.exe). Mandatory for Annotate command.
+	"tfpt_path": "C:/Program Files (x86)/Microsoft Team Foundation Server 2010 Power Tools/TFPT.exe",
+
+	// if set to [false] - Sublime Text will show confirmation prompt on every checkout attempt,
+	// otherwise it will attempt checkout file on modification/save silently.
+	"auto_checkout_enabled" : true,
+
+	// custom credential [username] to access TFS. If [null] - no custom credentials is used to access TFS repo.
+	"tfs_username": null,
+
+	// custom credential [password] to access TFS.
+	"tfs_password": null
 }

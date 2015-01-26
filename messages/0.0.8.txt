@@ -1,0 +1,5 @@
+Sublime TFS 0.0.8 Changelog:
+
+Features:
+- Add command "Set TFS Credentials..." (Issue #16)
+- Add settings [tfs_username], [tfs_password]

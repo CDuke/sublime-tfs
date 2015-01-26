@@ -25,6 +25,20 @@ def is_readonly(path):
     except WindowsError:
         pass
 # ------------------------------------------------------------
+class TfsCredentials(object):
+    username = None
+    password = None
+    def __init__(self):
+        settings = sublime.load_settings('sublime_tfs.sublime-settings')
+        self.username = settings.get("tfs_username", None)
+        self.password = settings.get("tfs_password", None)
+    def is_empty(self):
+        return self.username is None
+    def get_username(self):
+         return self.username if self.username is not None else ''
+    def get_password(self):
+         return self.password if self.password is not None else ''
+# ------------------------------------------------------------
 class TfsManager(object):
     def __init__(self):
         self.name = 'sublime_tfs'
@@ -74,13 +88,19 @@ class TfsManager(object):
 
     def run_command(self, command, path, is_graph = False, is_tfpt = False):
         try:
+            global credentials
             current_dir = os.getcwd()
             executable = self.tfpt_path if is_tfpt else self.tf_path
-            commands = [executable] + command + [path]
             working_dir = os.path.dirname(executable)
+            commands = [executable] + command + [path]
+            # ------------------------------
+            commands_with_credentials = list(commands)
+            if not credentials.is_empty():
+                commands_with_credentials = commands + ['/login:%s,%s' % (credentials.get_username(), credentials.get_password())]
+            # ------------------------------
             os.chdir(working_dir)
-            #!_! print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
-            return self.__run_command(commands, is_graph)
+            # !_! print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
+            return self.__run_command(commands_with_credentials, is_graph)
         except Exception:
             print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
             raise
@@ -283,4 +303,24 @@ class TfsCheckoutOpenFilesCommand(sublime_plugin.WindowCommand):
     def run(self):
         for view in self.window.views():
             view.run_command('tfs_checkout')
+# ------------------------------------------------------------
+class TfsQueryCredentialsCommand(sublime_plugin.WindowCommand):
+    """
+    Query TFS credentials from user
+    """
+    def run(self):
+        global credentials
+        self.window.show_input_panel('Input TFS user name:', credentials.get_username(), self.on_done_username, lambda i: None, lambda: None)
+
+    def on_done_username(self, s):
+        global credentials
+        credentials.username = s
+        self.window.show_input_panel('Input TFS password:', '', self.on_done_password, lambda i: None, lambda: None)
+
+    def on_done_password(self, s):
+        global credentials
+        credentials.password = s
+
+# ------------------------------------------------------------
+credentials = TfsCredentials()
 # ------------------------------------------------------------

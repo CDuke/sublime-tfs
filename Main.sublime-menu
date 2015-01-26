@@ -16,7 +16,9 @@
             { "command": "tfs_status", "caption": "Status" },
             { "command": "tfs_annotate", "caption": "Annotate..." },
             { "caption": "-" },
-            { "command": "tfs_checkout_open_files", "caption": "Checkout Open Files" }
+            { "command": "tfs_checkout_open_files", "caption": "Checkout Open Files" },
+            { "caption": "-" },
+            { "command": "tfs_query_credentials", "caption": "Set TFS Credentials..." }
         ]
     }
 ]

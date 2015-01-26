@@ -20,7 +20,6 @@ Plugin adds the following commands to `Context.sublime-menu`:
 - **Annotate...**            - Annotate (blame)
 - **Checkout Open Files**    - Checkout all open files
 
-
 Plugin adds the following commands to `Side Bar.sublime-menu`:
 
 - **Get Latest Version**     - Get latest version of selected in SideBar folder
@@ -48,6 +47,13 @@ Usually it's in:
 ### [auto_checkout_enabled]
 
 If `auto_checkout_enabled` is set to `false` - Sublime Text will show confirmation prompt on every checkout attempt, otherwise it will attempt checkout file on modification/save silently.
+
+### [tfs_username] and [tfs_password]
+
+Provide custom credentials to access TFS.
+
+You can set only `tfs_username` in settings file and provide `tfs_password` on each Sublime session with `Set TFS Credentials...` command from Context menu or Main menu.
+
 
 ## Usage
 

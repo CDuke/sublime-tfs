@@ -18,6 +18,12 @@ def encode_all_to_OS(strings):
     return map(lambda s: encode_to_OS(s), strings)
 def decode_from_OS(s, default=None):
     return s.decode(OS_ENCODING) if not s is None else default
+def get_file_name(view):
+    return view.file_name() if view else None
+def save_view(view):
+    path = get_file_name(view)
+    if path and not is_readonly(path):
+        view.run_command('save')
 # ------------------------------
 def is_readonly(path):
     try:
@@ -46,49 +52,52 @@ class TfsManager(object):
         self.tf_path = settings.get("tf_path")
         self.tfpt_path = settings.get("tfpt_path")
         self.auto_checkout_enabled = settings.get("auto_checkout_enabled", True)
+        self.allways_is_graph = settings.get("allways_is_graph", False)
 
     def is_under_tfs(self, path):
         return self.status(path)
 
     def checkout(self, path):
         if self.auto_checkout_enabled or sublime.ok_cancel_dialog("Checkout " + path + "?"):
-            return self.run_command(["checkout"], path)
+            return self.run_command(["checkout", "/recursive"], path)
         else:
             return (False, "Checkout is cancelled by user!")
 
     def checkin(self, path):
-        return self.run_command(["checkin", "/recursive"], path, True)
+        return self.run_command(["checkin", "/recursive"], path, is_graph = True)
 
     def undo(self, path):
-        return self.run_command(["undo"], path)
+        return self.run_command(["undo"], path, is_graph = self.allways_is_graph)
 
     def history(self, path):
-        return self.run_command(["history"], path, True)
+        return self.run_command(["history"], path, is_graph = True)
 
     def add(self, path):
-        return self.run_command(["add"], path)
+        return self.run_command(["add"], path, is_graph = self.allways_is_graph)
 
     def get_latest(self, path):
-        return self.run_command(["get", "/recursive"], path)
+        return self.run_command(["get", "/recursive"], path, is_graph = self.allways_is_graph)
 
     def difference(self, path):
-        return self.run_command(["difference"], path, True)
+        return self.run_command(["difference"], path, is_graph = True)
 
     def delete(self, path):
-        return self.run_command(["delete"], path)
+        return self.run_command(["delete"], path, is_graph = self.allways_is_graph)
 
     def status(self, path):
-        return self.run_command(["status"], path)
+        return self.run_command(["status"], path, is_graph = self.allways_is_graph)
 
     def annotate(self, path):
-        return self.run_command(["annotate"], path, True, True)
+        return self.run_command(["annotate"], path, is_graph = True, is_tfpt = True)
 
     def auto_checkout(self, path):
         return self.checkout(path) if self.status(path)[0] else (False, "")
 
     def run_command(self, command, path, is_graph = False, is_tfpt = False):
         try:
+            # ------------------------------
             global credentials
+            # ------------------------------
             current_dir = os.getcwd()
             executable = self.tfpt_path if is_tfpt else self.tf_path
             working_dir = os.path.dirname(executable)
@@ -178,109 +187,104 @@ class ThreadProgress():
         i += self.addend
         sublime.set_timeout(lambda: self.run(i), 100)
 # ------------------------------------------------------------
-class TfsCheckoutCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        path = self.view.file_name()
-        if not (path is None):
-            manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.checkout)
+class TfsCheckoutCommand(sublime_plugin.WindowCommand):
+    def run(self, path=None):
+        view = self.window.active_view()
+        path = path or get_file_name(view)
+        if path:
+            thread = TfsRunnerThread(path, TfsManager().checkout)
             thread.start()
-            ThreadProgress(self.view, thread, "Checkout...", "Checkout success: %s" % path)
+            ThreadProgress(view, thread, "Checkout: %s..." % path, "Checkout success: %s" % path)
+class TfsFilesCheckoutCommand(sublime_plugin.WindowCommand):
+    def run(self, files, dirs):
+        paths = (files or []) + (dirs or [])
+        if paths:
+            TfsCheckoutCommand(self.window).run(paths[0])
 class TfsUndoCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = self.view.file_name()
-        if not (path is None):
-            manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.undo)
+        path = get_file_name(self.view)
+        if path:
+            thread = TfsRunnerThread(path, TfsManager().undo)
             thread.start()
-            ThreadProgress(self.view, thread, "Undo...", "Undo success: %s" % path)
-class TfsCheckinCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        path = self.view.file_name()
-        if not (path is None):
-            if (not is_readonly(path)):
-                self.view.run_command('save')
-            manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.checkin)
+            ThreadProgress(self.view, thread, "Undo: %s..." % path, "Undo success: %s" % path)
+class TfsCheckinCommand(sublime_plugin.WindowCommand):
+    def run(self, path=None):
+        view = self.window.active_view()
+        path = path or get_file_name(view)
+        if path:
+            save_view(view)
+            thread = TfsRunnerThread(path, TfsManager().checkin)
             thread.start()
-            ThreadProgress(self.view, thread, "Checkin...", "Checkin success: %s" % path)
-class TfsDirCheckinCommand(sublime_plugin.WindowCommand): # used in SideBar - must be WindowCommand
-    def is_visible(self, dirs):
-        return (dirs != None) and (len(dirs) > 0) and all(os.path.isdir(item) for item in dirs)
-    def run(self, dirs):
-        path = dirs[0] # do Checkin for first selected directory only
-        thread = TfsRunnerThread(path, TfsManager().checkin)
-        thread.start()
-        ThreadProgress(self.window.active_view(), thread, "Checkin dir: %s..." % path, "Checkin success: %s" % path)
-class TfsHistoryCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        path = self.view.file_name()
-        if not (path is None):
-            manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.history)
+            ThreadProgress(view, thread, "Checkin: %s..." % path, "Checkin success: %s" % path)
+class TfsFilesCheckinCommand(sublime_plugin.WindowCommand):
+    def run(self, files, dirs):
+        paths = (files or []) + (dirs or [])
+        if paths:
+            TfsCheckinCommand(self.window).run(paths[0])
+class TfsHistoryCommand(sublime_plugin.WindowCommand):
+    def run(self, path=None):
+        view = self.window.active_view()
+        path = path or get_file_name(view)
+        if path:
+            thread = TfsRunnerThread(path, TfsManager().history)
             thread.start()
-            ThreadProgress(self.view, thread, "History...", "History success: %s" % path)
+            ThreadProgress(view, thread, "History: %s..." % path, "History success: %s" % path)
+class TfsFilesHistoryCommand(sublime_plugin.WindowCommand):
+    def run(self, files, dirs):
+        paths = (files or []) + (dirs or [])
+        if paths:
+            TfsHistoryCommand(self.window).run(paths[0])
 class TfsAddCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = self.view.file_name()
-        if not (path is None):
-            manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.add)
+        if path:
+            thread = TfsRunnerThread(path, TfsManager().add)
             thread.start()
-            ThreadProgress(self.view, thread, "Adding...", "Added success: %s" % path)
-class TfsGetLatestCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        path = self.view.file_name()
-        if not (path is None):
-            if (not is_readonly(path)):
-                self.view.run_command('save')
-            manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.get_latest)
+            ThreadProgress(self.view, thread, "Adding: %s..." % path, "Added success: %s" % path)
+class TfsGetLatestCommand(sublime_plugin.WindowCommand):
+    def run(self, path=None):
+        view = self.window.active_view()
+        path = path or get_file_name(view)
+        if path:
+            save_view(view)
+            thread = TfsRunnerThread(path, TfsManager().get_latest)
             thread.start()
-            ThreadProgress(self.view, thread, "Getting...", "Get latest success: %s" % path)
-class TfsDirGetLatestCommand(sublime_plugin.WindowCommand): # used in SideBar - must be WindowCommand
-    def is_visible(self, dirs):
-        return (dirs != None) and (len(dirs) > 0) and all(os.path.isdir(item) for item in dirs)
-    def run(self, dirs):
-        path = dirs[0] # do GLV for first selected directory only
-        manager = TfsManager()
-        thread = TfsRunnerThread(path, manager.get_latest)
-        thread.start()
-        ThreadProgress(self.window.active_view(), thread, "Getting dir: %s..." % path, "Directory get latest success: %s" % path)
+            ThreadProgress(view, thread, "Getting: %s..." % path, "Get latest success: %s" % path)
+class TfsFilesGetLatestCommand(sublime_plugin.WindowCommand):
+    def run(self, files, dirs):
+        paths = (files or []) + (dirs or [])
+        if paths:
+            TfsGetLatestCommand(self.window).run(paths[0])
 class TfsDifferenceCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = self.view.file_name()
-        if not (path is None):
-            if (not is_readonly(path)):
-                self.view.run_command('save')
-            manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.difference)
+        path = get_file_name(self.view)
+        if path:
+            save_view(self.view)
+            thread = TfsRunnerThread(path, TfsManager().difference)
             thread.start()
             ThreadProgress(self.view, thread, "Comparing...", "Comparing success: %s" % path)
 class TfsDeleteCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = self.view.file_name()
-        if not (path is None):
-            manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.delete)
+        path = get_file_name(self.view)
+        if path:
+            thread = TfsRunnerThread(path, TfsManager().delete)
             thread.start()
             ThreadProgress(self.view, thread, "Deleting...", "Delete success: %s" % path)
 class TfsStatusCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = self.view.file_name()
-        if not (path is None):
-            manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.status)
+        path = get_file_name(self.view)
+        if path:
+            thread = TfsRunnerThread(path, TfsManager().status)
             thread.start()
             ThreadProgress(self.view, thread, "Getting status...")
 class TfsAnnotateCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        path = self.view.file_name()
-        if not (path is None):
-            manager = TfsManager()
-            thread = TfsRunnerThread(path, manager.annotate)
+        path = get_file_name(self.view)
+        if path:
+            thread = TfsRunnerThread(path, TfsManager().annotate)
             thread.start()
             ThreadProgress(self.view, thread, "Annotating...", "Annotate done")
+# ------------------------------------------------------------
 class TfsEventListener(sublime_plugin.EventListener):
     def on_pre_save(self, view):
         if not hasattr(self, 'manager'):
@@ -288,7 +292,7 @@ class TfsEventListener(sublime_plugin.EventListener):
 
         if self.manager.auto_checkout_enabled:
             path = view.file_name()
-            if not (path is None):
+            if path:
                 if is_readonly(path):
                     thread = TfsRunnerThread(path, self.manager.auto_checkout)
                     thread.start()
@@ -296,6 +300,7 @@ class TfsEventListener(sublime_plugin.EventListener):
                     thread.join(5) #5 seconds. It's enough for auto-checkout.
                     if thread.isAlive():
                         sublime.set_timeout(lambda: "Checkout failed. Too long operation")
+# ------------------------------------------------------------
 class TfsCheckoutOpenFilesCommand(sublime_plugin.WindowCommand):
     """
     Checkout all opened files

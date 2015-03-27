@@ -59,3 +59,7 @@ You can set only `tfs_username` in settings file and provide `tfs_password` on e
 
 For almost all commands, except **Add**, the current file should be under TFS version control.
 After opening a file, you can execute a command in main menu **TFS** or from context menu.
+
+## Special Thanks
+
+* **Mathieu DARTIGUES**

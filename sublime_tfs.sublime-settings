@@ -13,5 +13,8 @@
 	"tfs_username": null,
 
 	// custom credential [password] to access TFS.
-	"tfs_password": null
+	"tfs_password": null,
+
+	// if set to [true] - execute every tfs-command in 'graphic' mode - can be useful for custom authentification (if needed)
+	"allways_is_graph": false
 }

@@ -52,6 +52,9 @@ If `auto_checkout_enabled` is set to `false` - Sublime Text will show confirmati
 
 Provide custom credentials to access TFS.
 
+### [allways_is_graph]
+Always show graphical window. See [Issue #19](https://bitbucket.org/CDuke/sublime-tfs/issue/19/authentication-problems)
+
 You can set only `tfs_username` in settings file and provide `tfs_password` on each Sublime session with `Set TFS Credentials...` command from Context menu or Main menu.
 
 

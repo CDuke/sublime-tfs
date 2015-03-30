@@ -22,7 +22,10 @@ Plugin adds the following commands to `Context.sublime-menu`:
 
 Plugin adds the following commands to `Side Bar.sublime-menu`:
 
-- **Get Latest Version**     - Get latest version of selected in SideBar folder
+- **Get Latest Version**     - Get latest version of selected in SideBar folder-or-file
+- **Checkout**               - Checkout selected in SideBar folder-or-file
+- **Checkin...**             - Checkin selected in SideBar folder-or-file
+- **History...**             - Show history of selected in SideBar folder-or-file
 
 ## Settings
 
@@ -32,8 +35,8 @@ It specifies path to Team Foundation **(TF.exe)**. Mandatory for all commands.
 
 Usually it's in:
 
-* **x86** - `C:\Program Files\Microsoft Visual Studio 10.0\Common7\IDE\TF.exe`
-* **x64** - `C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\TF.exe`
+- **x86** - `C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\TF.exe`
+- **x64** - `C:\Program Files\Microsoft Visual Studio 10.0\Common7\IDE\TF.exe`
 
 ### [tfpt_path]
 
@@ -41,8 +44,8 @@ It specifies path to TFS Power Tools **(TFPT.exe)**. Mandatory for **Annotate** 
 
 Usually it's in:
 
-* **x64** - `C:\Program Files (x86)\Microsoft Team Foundation Server 2010 Power Tools\TFPT.exe`
-* **x86** - `C:\Program Files\Microsoft Team Foundation Server 2010 Power Tools\TFPT.exe`
+- **x86** - `C:\Program Files (x86)\Microsoft Team Foundation Server 2010 Power Tools\TFPT.exe`
+- **x64** - `C:\Program Files\Microsoft Team Foundation Server 2010 Power Tools\TFPT.exe`
 
 ### [auto_checkout_enabled]
 
@@ -52,11 +55,11 @@ If `auto_checkout_enabled` is set to `false` - Sublime Text will show confirmati
 
 Provide custom credentials to access TFS.
 
-### [allways_is_graph]
-Always show graphical window. See [Issue #19](https://bitbucket.org/CDuke/sublime-tfs/issue/19/authentication-problems)
-
 You can set only `tfs_username` in settings file and provide `tfs_password` on each Sublime session with `Set TFS Credentials...` command from Context menu or Main menu.
 
+### [allways_is_graph]
+
+Always show graphical window. See [Issue #19](https://bitbucket.org/CDuke/sublime-tfs/issue/19/authentication-problems)
 
 ## Usage
 
@@ -65,4 +68,4 @@ After opening a file, you can execute a command in main menu **TFS** or from con
 
 ## Special Thanks
 
-* **Mathieu DARTIGUES**
+- **Mathieu DARTIGUES**

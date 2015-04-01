@@ -52,6 +52,7 @@ class TfsManager(object):
         self.tf_path = settings.get("tf_path")
         self.tfpt_path = settings.get("tfpt_path")
         self.auto_checkout_enabled = settings.get("auto_checkout_enabled", True)
+        self.auto_checkout_timeout = settings.get("auto_checkout_timeout", 5)
         self.allways_is_graph = settings.get("allways_is_graph", False)
 
     def is_under_tfs(self, path):
@@ -297,7 +298,7 @@ class TfsEventListener(sublime_plugin.EventListener):
                     thread = TfsRunnerThread(path, self.manager.auto_checkout)
                     thread.start()
                     ThreadProgress(view, thread, "Checkout...", "Checkout success: %s" % path)
-                    thread.join(5) #5 seconds. It's enough for auto-checkout.
+                    thread.join(self.manager.auto_checkout_timeout) #5 seconds by default, or defined in sublime-settings file
                     if thread.isAlive():
                         sublime.set_timeout(lambda: "Checkout failed. Too long operation")
 # ------------------------------------------------------------

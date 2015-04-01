@@ -1,0 +1,4 @@
+Sublime TFS 0.0.7 Changelog:
+
+Features:
+- Add command "Checkin..." to Sidebar - can be executed on first selected folder (Issue #14)

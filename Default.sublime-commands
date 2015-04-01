@@ -1,0 +1,26 @@
+[
+    { "command": "tfs_checkout", "caption": "TFS: Checkout" },
+    { "command": "tfs_undo", "caption": "TFS: Undo" },
+    { "command": "tfs_checkin", "caption": "TFS: Checkin" },
+    { "command": "tfs_history", "caption": "TFS: History" },
+    { "command": "tfs_add", "caption": "TFS: Add" },
+    { "command": "tfs_get_latest", "caption": "TFS: Get latest Version" },
+    { "command": "tfs_difference", "caption": "TFS: Compare with latest" },
+    { "command": "tfs_delete", "caption": "TFS: Delete" },
+    { "command": "tfs_status", "caption": "TFS: Status" },
+    { "command": "tfs_annotate", "caption": "TFS: Annotate" },
+    {
+        "caption": "Preferences: Sublime TFS Settings – Default",
+        "command": "open_file", "args":
+        {
+            "file": "${packages}/Sublime TFS/sublime_tfs.sublime-settings"
+        }
+    },
+    {
+        "caption": "Preferences: Sublime TFS Settings – User",
+        "command": "open_file", "args":
+        {
+            "file": "${packages}/User/sublime_tfs.sublime-settings"
+        }
+    }
+]

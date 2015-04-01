@@ -1,0 +1,4 @@
+Sublime TFS 0.0.2 Changelog:
+
+Features:
+ - Added autosafe on checkin, get latest, compare with latest

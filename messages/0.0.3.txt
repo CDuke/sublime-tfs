@@ -1,0 +1,4 @@
+Sublime TFS 0.0.3 Changelog:
+
+Bug fix:
+ - Check that file is readonly before save it

@@ -1,0 +1,25 @@
+[
+	{ "caption": "-", "id": "end" },
+	{ "caption": "-", "id": "sublime_tfs_start" },
+	{
+		"command": "tfs_files_get_latest",
+		"caption": "Get Latest Version",
+		"args": { "files": [], "dirs": [] }
+	},
+	{
+		"command": "tfs_files_checkout",
+		"caption": "Checkout",
+		"args": { "files": [], "dirs": [] }
+	},
+	{
+		"command": "tfs_files_checkin",
+		"caption": "Checkin...",
+		"args": { "files": [], "dirs": [] }
+	},
+	{
+		"command": "tfs_files_history",
+		"caption": "History...",
+		"args": { "files": [], "dirs": [] }
+	},
+	{ "caption": "-", "id": "sublime_tfs_end" }
+]

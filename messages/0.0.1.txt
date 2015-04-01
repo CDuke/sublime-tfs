@@ -1,0 +1,12 @@
+Sublime TFS 0.0.1 Changelog:
+
+Features:
+ - Checkout file
+ - Checkin file
+ - Get latest version file
+ - View history of file
+ - Compare file with version
+ - Undo changes in file 
+ - Check file status
+ - Add file
+ - Delete file

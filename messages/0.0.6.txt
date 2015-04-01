@@ -1,0 +1,10 @@
+Sublime TFS 0.0.6 Changelog:
+
+Features:
+- Add command "Get Latest Version" to Sidebar (Issue #5)
+- Add command "Checkout Open Files" to TFS Menu and Context Menu
+- Add new setting "auto_checkout_enabled"
+
+Bugfix:
+- Change autocheckout mechanism. Now it's raised on_pre_save event. (Issue #9)
+- Working Directory for `tf` and `tfpt` is now calculationg from its path. (Issue #10)

@@ -9,6 +9,9 @@
 	// otherwise it will attempt checkout file on modification/save silently.
 	"auto_checkout_enabled" : true,
 
+	// if auto_checkout_enabled is set to true, Sublime Text will wait until this timeout to consider it fails during checkout
+	"auto_checkout_timeout" : 5,
+
 	// custom credential [username] to access TFS. If [null] - no custom credentials is used to access TFS repo.
 	"tfs_username": null,
 

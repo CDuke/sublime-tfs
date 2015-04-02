@@ -35,8 +35,10 @@ It specifies path to Team Foundation **(TF.exe)**. Mandatory for all commands.
 
 Usually it's in:
 
-- **x86** - `C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\TF.exe`
-- **x64** - `C:\Program Files\Microsoft Visual Studio 10.0\Common7\IDE\TF.exe`
+- VS **2010** - (x86) - `C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\TF.exe`
+- VS **2010** - (x64) - `C:\Program Files\Microsoft Visual Studio 10.0\Common7\IDE\TF.exe`
+- VS **2013** - (x86) - `C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\TF.exe`
+- VS **2013** - (x64) - `C:\Program Files\Microsoft Visual Studio 12.0\Common7\IDE\TF.exe`
 
 ### [tfpt_path]
 
@@ -44,12 +46,18 @@ It specifies path to TFS Power Tools **(TFPT.exe)**. Mandatory for **Annotate** 
 
 Usually it's in:
 
-- **x86** - `C:\Program Files (x86)\Microsoft Team Foundation Server 2010 Power Tools\TFPT.exe`
-- **x64** - `C:\Program Files\Microsoft Team Foundation Server 2010 Power Tools\TFPT.exe`
+- VS **2010** - (x86) - `C:\Program Files (x86)\Microsoft Team Foundation Server 2010 Power Tools\TFPT.exe`
+- VS **2010** - (x64) - `C:\Program Files\Microsoft Team Foundation Server 2010 Power Tools\TFPT.exe`
+- VS **2013** - (x86) - `C:\Program Files (x86)\Microsoft Team Foundation Server 2013 Power Tools\TFPT.exe`
+- VS **2013** - (x64) - `C:\Program Files\Microsoft Team Foundation Server 2013 Power Tools\TFPT.exe`
 
 ### [auto_checkout_enabled]
 
 If `auto_checkout_enabled` is set to `false` - Sublime Text will show confirmation prompt on every checkout attempt, otherwise it will attempt checkout file on modification/save silently.
+
+### [auto_checkout_timeout]
+
+If `auto_checkout_enabled` is set to `true` - Sublime Text will wait until this timeout to consider it fails during checkout.
 
 ### [tfs_username] and [tfs_password]
 

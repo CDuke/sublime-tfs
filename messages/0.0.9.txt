@@ -1,6 +1,0 @@
-Sublime TFS 0.0.9 Changelog:
-
-Features:
-- new commands in side-bar: "Checkout", "History..." (thanks to `Mathieu DARTIGUES`)
-- all side-bar commands can be executed on `files` and `directories`
-- Add setting [allways_is_graph] to fix Issue #19

@@ -1,6 +1,6 @@
 # [Sublime TFS](https://bitbucket.org/CDuke/sublime-tfs)
 
-Sublime TFS is a plugin for the wonderful text editor [Sublime Text 2](http://sublimetext.com/2) and [Sublime Text 3](http://sublimetext.com/3).
+**Sublime TFS** is a plugin for the wonderful text editor [Sublime Text 2](http://sublimetext.com/2) and [Sublime Text 3](http://sublimetext.com/3).
 
 ## Overview
 
@@ -17,15 +17,17 @@ Plugin adds the following commands to `Context.sublime-menu`:
 - **Compare With Latest...** - Compare current file with latest version
 - **Delete**                 - Delete current file from TFS (remove file from storage too)
 - **Status**                 - Check current file TFS status
+- **Shelve...**              - Show create a shelveset for pending changes dialog
 - **Annotate...**            - Annotate (blame)
 - **Checkout Open Files**    - Checkout all open files
+- **Set TFS Credentials...** - Allows to provide `tfs_username` and `tfs_password` settings. See below.
 
 Plugin adds the following commands to `Side Bar.sublime-menu`:
 
-- **Get Latest Version**     - Get latest version of selected in SideBar folder-or-file
-- **Checkout**               - Checkout selected in SideBar folder-or-file
-- **Checkin...**             - Checkin selected in SideBar folder-or-file
-- **History...**             - Show history of selected in SideBar folder-or-file
+- **Get Latest Version**     - Get latest version of selected in SideBar directory-or-file
+- **Checkout**               - Checkout selected in SideBar directory-or-file
+- **Checkin...**             - Checkin selected in SideBar directory-or-file
+- **History...**             - Show history of selected in SideBar directory-or-file (recursive on directories)
 
 ## Settings
 
@@ -65,7 +67,7 @@ Provide custom credentials to access TFS.
 
 You can set only `tfs_username` in settings file and provide `tfs_password` on each Sublime session with `Set TFS Credentials...` command from Context menu or Main menu.
 
-### [allways_is_graph]
+### [always_is_graph]
 
 Always show graphical window. See [Issue #19](https://bitbucket.org/CDuke/sublime-tfs/issue/19/authentication-problems)
 

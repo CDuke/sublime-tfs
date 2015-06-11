@@ -15,9 +15,9 @@
 	// custom credential [username] to access TFS. If [null] - no custom credentials is used to access TFS repo.
 	"tfs_username": null,
 
-	// custom credential [password] to access TFS.
+	// custom credential [password] to access TFS - but remember that is not secure to store password in sublime text config.
 	"tfs_password": null,
 
 	// if set to [true] - execute every tfs-command in 'graphic' mode - can be useful for custom authentification (if needed)
-	"allways_is_graph": false
+	"always_is_graph": false
 }

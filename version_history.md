@@ -1,12 +1,23 @@
 # Sublime TFS Version History
 
+## Changelog 0.0.10
+
+**Features:**
+
+- Add command `Shelve...` (Issue #23)
+- `History...` command is now recursive on directories
+
+**Bugfix:**
+
+- Issue #20 (thanks to `Mathieu DARTIGUES`)
+
 ## Changelog 0.0.9
 
 **Features:**
 
 - new commands in side-bar: `Checkout`, `History...` (thanks to `Mathieu DARTIGUES`)
 - all side-bar commands can be executed on `files` and `directories`
-- Add setting `allways_is_graph` to fix Issue #19
+- Add setting `always_is_graph` to fix Issue #19
 - Add setting `auto_checkout_timeout` (thanks to `Mathieu DARTIGUES`)
 
 ## Changelog 0.0.8
@@ -20,7 +31,7 @@
 
 **Features:**
 
-- Add command `Checkin...` to side-bar - can be executed on first selected folder (Issue #14)
+- Add command `Checkin...` to side-bar - can be executed on first selected directory (Issue #14)
 
 ## Changelog 0.0.6
 
@@ -45,7 +56,7 @@
 
 **Features:**
 
-- Add command `anotate`
+- Add command `Annotate...`
 - Add `Auto checkout` mode
 - Add context menu
 

@@ -1,12 +1,13 @@
 import sublime
 import sublime_plugin
 # ------------------------------
-import threading
+import datetime
 import locale
-import subprocess
 import os
 import stat
+import subprocess
 import sys
+import threading
 # ------------------------------
 OS_ENCODING = locale.getpreferredencoding()
 IS_PYTHON_2 = (sys.hexversion < 0x03000000)
@@ -41,9 +42,9 @@ class TfsCredentials(object):
     def is_empty(self):
         return self.username is None
     def get_username(self):
-         return self.username if self.username is not None else ''
+         return self.username or ''
     def get_password(self):
-         return self.password if self.password is not None else ''
+         return self.password or ''
 # ------------------------------------------------------------
 class TfsManager(object):
     def __init__(self):
@@ -53,14 +54,14 @@ class TfsManager(object):
         self.tfpt_path = settings.get("tfpt_path")
         self.auto_checkout_enabled = settings.get("auto_checkout_enabled", True)
         self.auto_checkout_timeout = settings.get("auto_checkout_timeout", 5)
-        self.allways_is_graph = settings.get("allways_is_graph", False)
+        self.always_is_graph = settings.get("allways_is_graph", settings.get("always_is_graph", False)) # `allways` is typo but someone could use it already...
 
     def is_under_tfs(self, path):
         return self.status(path)
 
     def checkout(self, path):
         if self.auto_checkout_enabled or sublime.ok_cancel_dialog("Checkout " + path + "?"):
-            return self.run_command(["checkout", "/recursive"], path)
+            return self.run_command(["checkout", "/recursive"], path, is_graph = self.always_is_graph)
         else:
             return (False, "Checkout is cancelled by user!")
 
@@ -68,25 +69,32 @@ class TfsManager(object):
         return self.run_command(["checkin", "/recursive"], path, is_graph = True)
 
     def undo(self, path):
-        return self.run_command(["undo"], path, is_graph = self.allways_is_graph)
+        return self.run_command(["undo"], path, is_graph = self.always_is_graph)
 
     def history(self, path):
-        return self.run_command(["history"], path, is_graph = True)
+        return self.run_command(["history", "/recursive"], path, is_graph = True)
 
     def add(self, path):
-        return self.run_command(["add"], path, is_graph = self.allways_is_graph)
+        return self.run_command(["add"], path, is_graph = self.always_is_graph)
 
     def get_latest(self, path):
-        return self.run_command(["get", "/recursive"], path, is_graph = self.allways_is_graph)
+        return self.run_command(["get", "/recursive"], path, is_graph = self.always_is_graph)
 
     def difference(self, path):
         return self.run_command(["difference"], path, is_graph = True)
 
     def delete(self, path):
-        return self.run_command(["delete"], path, is_graph = self.allways_is_graph)
+        return self.run_command(["delete"], path, is_graph = self.always_is_graph)
 
     def status(self, path):
-        return self.run_command(["status"], path, is_graph = self.allways_is_graph)
+        return self.run_command(["status"], path, is_graph = self.always_is_graph)
+
+    def shelve(self, path):
+        # ------------------------------
+        dname, fname = os.path.split(path)
+        shelveset_name = fname[:200] + ' ' + datetime.datetime.now().strftime('[%Y-%m-%dT%H-%M]')
+        # ------------------------------
+        return self.run_command(["shelve", "/replace", '/comment:' + shelveset_name, "/validate", shelveset_name, path, "/recursive"], '', is_graph = True)
 
     def annotate(self, path):
         return self.run_command(["annotate"], path, is_graph = True, is_tfpt = True)
@@ -109,7 +117,7 @@ class TfsManager(object):
                 commands_with_credentials = commands + ['/login:%s,%s' % (credentials.get_username(), credentials.get_password())]
             # ------------------------------
             os.chdir(working_dir)
-            # !_! print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
+            #!_! print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
             return self.__run_command(commands_with_credentials, is_graph)
         except Exception:
             print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
@@ -128,7 +136,6 @@ class TfsManager(object):
             p = subprocess.Popen(commands, stderr=subprocess.PIPE, stdout=subprocess.PIPE, startupinfo=startup_info)
         (out, err) = p.communicate()
         if p.returncode == 0:
-            print(out)
             return True, decode_from_OS(out, None)
         else:
             return False, decode_from_OS(err, "Unknown error")
@@ -163,12 +170,14 @@ class ThreadProgress():
             else:
                 sublime.status_message('')
             # ------------------------------
-            if not self.thread.success:
-                sublime.status_message(self.thread.message)
-                # sublime.message_dialog(self.thread.message)
+            status_message = ''
+            if self.thread.success:
+                status_message = self.success_message or self.thread.message or 'Success.'
             else:
-                sublime.status_message(self.success_message if not self.success_message is None else self.thread.message)
-                # sublime.message_dialog(self.success_message if not self.success_message is None else self.thread.message)
+                status_message = self.thread.message
+            # ------------------------------
+            sublime.status_message(status_message)
+            #!_! sublime.message_dialog(status_message)
             # ------------------------------
             return
         # ------------------------------
@@ -186,6 +195,7 @@ class ThreadProgress():
         if not before:
             self.addend = 1
         i += self.addend
+        # ------------------------------
         sublime.set_timeout(lambda: self.run(i), 100)
 # ------------------------------------------------------------
 class TfsCheckoutCommand(sublime_plugin.WindowCommand):
@@ -271,6 +281,19 @@ class TfsDeleteCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, TfsManager().delete)
             thread.start()
             ThreadProgress(self.view, thread, "Deleting...", "Delete success: %s" % path)
+class TfsShelveCommand(sublime_plugin.WindowCommand):
+    def run(self, path = None):
+        view = self.window.active_view()
+        path = path or get_file_name(view)
+        if path:
+            thread = TfsRunnerThread(path, TfsManager().shelve)
+            thread.start()
+            ThreadProgress(view, thread, "Shelving...")
+class TfsFilesShelveCommand(sublime_plugin.WindowCommand):
+    def run(self, files, dirs):
+        paths = (files or []) + (dirs or [])
+        if paths:
+            TfsShelveCommand(self.window).run(paths[0])
 class TfsStatusCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         path = get_file_name(self.view)

@@ -7,6 +7,7 @@
     { "command": "tfs_get_latest", "caption": "TFS: Get latest Version" },
     { "command": "tfs_difference", "caption": "TFS: Compare with latest" },
     { "command": "tfs_delete", "caption": "TFS: Delete" },
+    { "command": "tfs_shelve", "caption": "TFS: Shelve" },
     { "command": "tfs_status", "caption": "TFS: Status" },
     { "command": "tfs_annotate", "caption": "TFS: Annotate" },
     {

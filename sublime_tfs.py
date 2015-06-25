@@ -13,6 +13,9 @@ OS_ENCODING = locale.getpreferredencoding()
 IS_PYTHON_2 = (sys.hexversion < 0x03000000)
 IS_PYTHON_3 = (sys.hexversion > 0x03000000)
 # ------------------------------
+TRACE_INFO_ENABLED = False
+TRACE_ERROR_ENABLED = True
+# ------------------------------
 def encode_to_OS(s, default=None):
     return s.encode(OS_ENCODING) if not s is None else default
 def encode_all_to_OS(strings):
@@ -25,6 +28,12 @@ def save_view(view):
     path = get_file_name(view)
     if path and not is_readonly(path):
         view.run_command('save')
+def trace_info(s):
+    if TRACE_INFO_ENABLED:
+        print(s)
+def trace_error(s):
+    if TRACE_ERROR_ENABLED:
+        print(s)
 # ------------------------------
 def is_readonly(path):
     try:
@@ -72,7 +81,11 @@ class TfsManager(object):
         return self.run_command(["undo"], path, is_graph = self.always_is_graph)
 
     def history(self, path):
-        return self.run_command(["history", "/recursive"], path, is_graph = True)
+        if os.path.isdir(path):
+            commands = ["history", "/recursive"]
+        else:
+            commands = ["history"]
+        return self.run_command(commands, path, is_graph = True)
 
     def add(self, path):
         return self.run_command(["add"], path, is_graph = self.always_is_graph)
@@ -117,10 +130,10 @@ class TfsManager(object):
                 commands_with_credentials = commands + ['/login:%s,%s' % (credentials.get_username(), credentials.get_password())]
             # ------------------------------
             os.chdir(working_dir)
-            #!_! print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
+            trace_info("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
             return self.__run_command(commands_with_credentials, is_graph)
         except Exception:
-            print("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
+            trace_error("commands: [%s]\nis_graph: [%s]\nworking_dir: [%s]" % (commands, is_graph, working_dir))
             raise
         finally:
             os.chdir(current_dir)

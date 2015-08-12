@@ -212,8 +212,8 @@ class ThreadProgress():
         sublime.set_timeout(lambda: self.run(i), 100)
 # ------------------------------------------------------------
 class TfsCheckoutCommand(sublime_plugin.WindowCommand):
-    def run(self, path=None):
-        view = self.window.active_view()
+    def run(self, path=None, view=None):
+        view = view or self.window.active_view()
         path = path or get_file_name(view)
         if path:
             thread = TfsRunnerThread(path, TfsManager().checkout)
@@ -343,8 +343,9 @@ class TfsCheckoutOpenFilesCommand(sublime_plugin.WindowCommand):
     Checkout all opened files
     """
     def run(self):
-        for view in self.window.views():
-            view.run_command('tfs_checkout')
+        for v in self.window.views():
+            command = TfsCheckoutCommand(self.window)
+            command.run(view = v)
 # ------------------------------------------------------------
 class TfsQueryCredentialsCommand(sublime_plugin.WindowCommand):
     """

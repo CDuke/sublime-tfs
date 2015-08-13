@@ -10,6 +10,7 @@
     { "command": "tfs_shelve", "caption": "TFS: Shelve" },
     { "command": "tfs_status", "caption": "TFS: Status" },
     { "command": "tfs_annotate", "caption": "TFS: Annotate" },
+    { "command": "tfs_move", "caption": "TFS: Move" },
     {
         "caption": "Preferences: Sublime TFS Settings – Default",
         "command": "open_file", "args":

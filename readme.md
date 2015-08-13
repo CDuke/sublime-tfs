@@ -19,6 +19,7 @@ Plugin adds the following commands to `Context.sublime-menu`:
 - **Status**                 - Check current file TFS status
 - **Shelve...**              - Show create a shelveset for pending changes dialog
 - **Annotate...**            - Annotate (blame)
+- **Move...**                - Move/Rename current file in TFS
 - **Checkout Open Files**    - Checkout all open files
 - **Set TFS Credentials...** - Allows to provide `tfs_username` and `tfs_password` settings. See below.
 

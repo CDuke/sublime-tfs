@@ -16,6 +16,7 @@
             { "command": "tfs_shelve", "caption": "Shelve..." },
             { "command": "tfs_status", "caption": "Status" },
             { "command": "tfs_annotate", "caption": "Annotate..." },
+            { "command": "tfs_move", "caption": "Move..." },
             { "caption": "-" },
             { "command": "tfs_checkout_open_files", "caption": "Checkout Open Files" },
             { "caption": "-" },

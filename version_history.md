@@ -1,5 +1,11 @@
 # Sublime TFS Version History
 
+## Changelog 0.0.11
+
+**Features:**
+
+- Add command `Move`
+
 ## Changelog 0.0.10
 
 **Features:**

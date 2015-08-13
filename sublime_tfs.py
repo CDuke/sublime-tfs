@@ -109,6 +109,19 @@ class TfsManager(object):
         # ------------------------------
         return self.run_command(["shelve", "/replace", '/comment:' + shelveset_name, "/validate", shelveset_name, path, "/recursive"], '', is_graph = True)
 
+    def move(self, from_path, to_path):
+        is_ok, msg = self.run_command(["move", from_path, to_path], '')
+        try:
+            window = sublime.active_window()
+            if is_ok and window:
+                view = window.active_view()
+                if view and view.file_name() == from_path:
+                    window.run_command("close")
+                window.open_file(to_path)
+        except Exception:
+            pass
+        return is_ok, msg
+
     def annotate(self, path):
         return self.run_command(["annotate"], path, is_graph = True, is_tfpt = True)
 
@@ -321,6 +334,19 @@ class TfsAnnotateCommand(sublime_plugin.TextCommand):
             thread = TfsRunnerThread(path, TfsManager().annotate)
             thread.start()
             ThreadProgress(self.view, thread, "Annotating...", "Annotate done")
+class TfsMoveCommand(sublime_plugin.WindowCommand):
+    # ------------------------------
+    current_name = None
+    new_name = None
+    # ------------------------------
+    def run(self, path = None):
+        view = self.window.active_view()
+        self.current_name = path or get_file_name(view)
+        self.window.show_input_panel('New name', self.current_name, self.__on_done, None, None)
+    # ------------------------------
+    def __on_done(self, new_name):
+        self.new_name = new_name
+        TfsManager().move(self.current_name, self.new_name)
 # ------------------------------------------------------------
 class TfsEventListener(sublime_plugin.EventListener):
     def on_pre_save(self, view):

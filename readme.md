@@ -42,6 +42,8 @@ Usually it's in:
 - VS **2010** - (x64) - `C:\Program Files\Microsoft Visual Studio 10.0\Common7\IDE\TF.exe`
 - VS **2013** - (x86) - `C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\TF.exe`
 - VS **2013** - (x64) - `C:\Program Files\Microsoft Visual Studio 12.0\Common7\IDE\TF.exe`
+- VS **2015** - (x86) - `C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\TF.exe`
+- VS **2015** - (x64) - `C:\Program Files\Microsoft Visual Studio 14.0\Common7\IDE\TF.exe`
 
 ### [tfpt_path]
 

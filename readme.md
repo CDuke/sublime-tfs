@@ -1,4 +1,4 @@
-# [Sublime TFS](https://bitbucket.org/CDuke/sublime-tfs)
+# [Sublime TFS](https://github.com/CDuke/sublime-tfs)
 
 **Sublime TFS** is a plugin for the wonderful text editor [Sublime Text 2](http://sublimetext.com/2) and [Sublime Text 3](http://sublimetext.com/3).
 
@@ -72,7 +72,7 @@ You can set only `tfs_username` in settings file and provide `tfs_password` on e
 
 ### [always_is_graph]
 
-Always show graphical window. See [Issue #19](https://bitbucket.org/CDuke/sublime-tfs/issue/19/authentication-problems)
+Always show graphical window. See [Issue #19](https://github.com/CDuke/sublime-tfs/issue/19/authentication-problems)
 
 ## Usage
 

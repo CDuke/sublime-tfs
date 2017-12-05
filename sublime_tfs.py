@@ -68,30 +68,33 @@ class TfsManager(object):
     def is_under_tfs(self, path):
         return self.status(path)
 
+    def __is_recursive(path):
+        return ["/recursive"] if os.path.isdir(path) else []
+
     def checkout(self, path):
         if self.auto_checkout_enabled or sublime.ok_cancel_dialog("Checkout " + path + "?"):
-            return self.run_command(["checkout", "/recursive"], path, is_graph = self.always_is_graph)
+            commands = ["checkout"] + self.__is_recursive(path)
+            return self.run_command(commands, path, is_graph = self.always_is_graph)
         else:
             return (False, "Checkout is cancelled by user!")
 
     def checkin(self, path):
-        return self.run_command(["checkin", "/recursive"], path, is_graph = True)
+        commands = ["checkin"] + self.__is_recursive(path)
+        return self.run_command(commands, path, is_graph = True)
 
     def undo(self, path):
         return self.run_command(["undo"], path, is_graph = self.always_is_graph)
 
     def history(self, path):
-        if os.path.isdir(path):
-            commands = ["history", "/recursive"]
-        else:
-            commands = ["history"]
+        commands = ["history"] + self.__is_recursive(path)
         return self.run_command(commands, path, is_graph = True)
 
     def add(self, path):
         return self.run_command(["add"], path, is_graph = self.always_is_graph)
 
     def get_latest(self, path):
-        return self.run_command(["get", "/recursive"], path, is_graph = self.always_is_graph)
+        commands = ["get"] + self.__is_recursive(path)
+        return self.run_command(commands, path, is_graph = self.always_is_graph)
 
     def difference(self, path):
         return self.run_command(["difference"], path, is_graph = True)
@@ -107,7 +110,8 @@ class TfsManager(object):
         dname, fname = os.path.split(path)
         shelveset_name = fname[:200] + ' ' + datetime.datetime.now().strftime('[%Y-%m-%dT%H-%M]')
         # ------------------------------
-        return self.run_command(["shelve", "/replace", '/comment:' + shelveset_name, "/validate", shelveset_name, path, "/recursive"], '', is_graph = True)
+        commands = ["shelve", "/replace", '/comment:' + shelveset_name, "/validate", shelveset_name, path] + __is_recursive(path)
+        return self.run_command(commands, '', is_graph = True)
 
     def move(self, from_path, to_path):
         is_ok, msg = self.run_command(["move", from_path, to_path], '')

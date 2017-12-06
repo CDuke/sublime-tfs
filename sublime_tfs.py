@@ -68,7 +68,7 @@ class TfsManager(object):
     def is_under_tfs(self, path):
         return self.status(path)
 
-    def __is_recursive(path):
+    def __is_recursive(self, path):
         return ["/recursive"] if os.path.isdir(path) else []
 
     def checkout(self, path):
@@ -110,7 +110,7 @@ class TfsManager(object):
         dname, fname = os.path.split(path)
         shelveset_name = fname[:200] + ' ' + datetime.datetime.now().strftime('[%Y-%m-%dT%H-%M]')
         # ------------------------------
-        commands = ["shelve", "/replace", '/comment:' + shelveset_name, "/validate", shelveset_name, path] + __is_recursive(path)
+        commands = ["shelve", "/replace", '/comment:' + shelveset_name, "/validate", shelveset_name, path] + self.__is_recursive(path)
         return self.run_command(commands, '', is_graph = True)
 
     def move(self, from_path, to_path):

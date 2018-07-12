@@ -395,5 +395,7 @@ class TfsQueryCredentialsCommand(sublime_plugin.WindowCommand):
         credentials.password = s
 
 # ------------------------------------------------------------
-credentials = TfsCredentials()
+def plugin_loaded():
+    global credentials
+    credentials = TfsCredentials()
 # ------------------------------------------------------------

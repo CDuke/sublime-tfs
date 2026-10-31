@@ -163,7 +163,12 @@ class TfsManager(object):
         else:
             startup_info = subprocess.STARTUPINFO()
             startup_info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            p = subprocess.Popen(commands, stderr=subprocess.PIPE, stdout=subprocess.PIPE, startupinfo=startup_info)
+            p = subprocess.Popen(
+                commands,
+                stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                startupinfo=startup_info
+            )
         (out, err) = p.communicate()
         if p.returncode == 0:
             return True, decode_from_OS(out, None)
@@ -365,7 +370,7 @@ class TfsEventListener(sublime_plugin.EventListener):
                     thread.start()
                     ThreadProgress(view, thread, "Checkout...", "Checkout success: %s" % path)
                     thread.join(self.manager.auto_checkout_timeout) #5 seconds by default, or defined in sublime-settings file
-                    if thread.isAlive():
+                    if thread.is_alive():
                         sublime.set_timeout(lambda: "Checkout failed. Too long operation")
 # ------------------------------------------------------------
 class TfsCheckoutOpenFilesCommand(sublime_plugin.WindowCommand):
